@@ -1,0 +1,498 @@
+@font-face {
+  font-family: "Font Awesome 5 Free";
+  src: url("/static/icons/fonts/fa-solid-900.eot");
+  src: url('/static/icons/fonts/fa-solid-900.eot?#iefix') format('embedded-opentype'),
+       url('/static/icons/fonts/fa-solid-900.woff2') format('woff2'),
+       url('/static/icons/fonts/fa-solid-900.woff') format('woff'),
+       url('/static/icons/fonts/fa-solid-900.ttf')  format('truetype');
+}
+
+.player {
+  position: absolute;
+  background: black;
+
+  max-width: 100%;
+  max-height: 100%;
+  overflow: hidden;
+}
+
+.player video {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+}
+
+@keyframes spinner {
+  to {transform: rotate(360deg);}
+}
+
+.player .poster {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background-image: url('/static/logo_large.png');
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+  background-color: black;
+}
+
+.player .poster.hidden {
+  opacity: 0.0;
+  transition: opacity 0.5s linear, visibility 0.5s;
+  visibility: hidden;
+}
+
+.loader:before {
+  opacity: 0.0;
+  transition: opacity 0.1s linear;
+}
+ 
+.loader.loading:before {
+  content: '';
+  box-sizing: border-box;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 250px;
+  height: 250px;
+  margin-top: -125px;
+  margin-left: -125px;
+  border-radius: 50%;
+  animation: spinner 2s ease infinite;
+  border: 10px solid transparent;
+  border-top-color: #fff;
+  border-bottom-color: #fff;
+  opacity: 0.8;
+  transition: opacity 0.5s linear;
+}
+
+.player .debug-panel {
+  position: absolute;
+  width: 50%;
+  background-color: gray;
+  opacity: 0.7;
+  color: white;
+  text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+  font-size: 1.2em;
+  padding-top: 1em;
+  padding-left: 1em;
+}
+
+.player .message-panel {
+  position: absolute;
+  top: 25%;
+  left: 10%;
+  transform: translateY(-25%);
+  height: 10%;
+  width: 80%;
+  border-radius: 25px;
+  background-color: gray;
+  opacity: 0.8;
+  color: white;
+  text-align: center;
+  text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+  font-size: 1.5em;
+  font-family: sans-serif;
+
+  visibility: hidden;
+}
+
+.player .message-panel .message-text {
+  position: absolute;
+  top: 50%;
+  width: 100%;
+  transform: translate(0, -50%);
+}
+
+.player .controls {
+  position: absolute;
+  height: 100%;
+  width: 100%;
+  opacity: 0.9;
+  background: rgb(0,0,0);
+  background: linear-gradient(0deg, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 40%, rgba(255,255,255,0) 100%); 
+  transition: opacity 0.1s linear;
+  text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+}
+
+.player .controls.hidden {
+  opacity: 0.0;
+  transition: opacity 0.5s linear, visibility 0.5s;
+  visibility: hidden;
+}
+
+.player .controls .settings {
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity 0.1s linear;
+
+  position: absolute;
+  background-color: black;
+  display: flex;
+  flex-direction: column;
+  align-content: flex-start;
+  border-radius: 5px;
+  padding: 5px;
+  bottom: 150px;
+  left: 50%;
+  transform: translate(-50%, 0);
+}
+
+.player .controls .settings.active {
+  visibility: visible;
+  opacity: 1;
+  transition: opacity 0.3s linear;
+}
+
+.player .controls .settings button {
+  background-color: transparent;
+  font-weight: 900;
+  font-family: "Font Awesome 5 Free";
+  font-size: 30px;
+  text-align: left;
+}
+
+.player .controls .settings button::before {
+  margin-right: 10px;
+  content: "\f205";
+}
+
+.player .controls .settings button.inactive::before {
+  margin-right: 10px;
+  content: "\f204";
+}
+
+.player .controls .toolbar {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  bottom: 5px;
+  width: 95%;
+  left: 50%;
+  transform: translate(-50%, 0);
+}
+
+.player .controls .timeline-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  position: absolute;
+  width: 90%;
+  left: 50%;
+  transform: translate(-50%, 0);
+}
+
+.player .controls .timeline-bar .timeline {
+  flex-grow: 1;
+  background: transparent;
+}
+
+.player .controls .timeline-bar .time-label {
+  color: white;
+  font-size: 20px;
+  font-family: sans-serif;
+  margin: 10px;
+}
+
+.player .controls .timeline-bar .video-time {
+}
+
+.player .controls .timeline-bar .video-duration {
+}
+
+
+.player .controls .toolbar button {
+  background-color: transparent;
+  font-weight: 900;
+  font-family: "Font Awesome 5 Free";
+}
+
+@media (orientation: landscape) {
+  .player .controls .toolbar button {
+    font-size: 5vw;
+    width: 7vw;
+  }
+
+  .player .controls .timeline-bar {
+    bottom: 6vw;
+  }
+
+  input[type=range].timeline::-webkit-slider-runnable-track {
+    height: 10px;
+  }
+  input[type=range].timeline::-webkit-slider-thumb {
+    height: 30px;
+    width: 30px;
+    border-radius: 30px;
+    margin-top: -12px;
+  }
+  input[type=range].timeline::-moz-range-track {
+    height: 10px;
+  }
+  input[type=range].timeline::-moz-range-thumb {
+    height: 30px;
+    width: 30px;
+    border-radius: 30px;
+  }
+  input[type=range].timeline::-ms-track {
+    height: 10px;
+  }
+  input[type=range].timeline::-ms-thumb {
+    height: 30px;
+    width: 30px;
+    border-radius: 30px;
+  }
+}
+
+@media (orientation: portrait) {
+  .player .controls .toolbar button {
+    font-size: 4vh;
+    width: 7vh;
+  }
+
+  .player .controls .timeline-bar {
+    bottom: 6vh;
+  }
+
+  .player video {
+    width: 100%;
+    height: auto;
+    top: 0px;
+  }
+
+  input[type=range].timeline::-webkit-slider-runnable-track {
+    height: 20px;
+  }
+  input[type=range].timeline::-webkit-slider-thumb {
+    height: 60px;
+    width: 60px;
+    border-radius: 60px;
+    margin-top: -24px;
+  }
+  input[type=range].timeline::-moz-range-track {
+    height: 20px;
+  }
+  input[type=range].timeline::-moz-range-thumb {
+    height: 60px;
+    width: 60px;
+    border-radius: 60px;
+  }
+  input[type=range].timeline::-ms-track {
+    height: 20px;
+  }
+  input[type=range].timeline::-ms-thumb {
+    height: 60px;
+    width: 60px;
+    border-radius: 60px;
+  }
+}
+
+@media (pointer: fine) {
+  .player .controls .toolbar {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .player .controls .toolbar button {
+    font-size: 2vw;
+    width: 4vw;
+  }
+
+  .player .controls .timeline-bar {
+    bottom: 2.5vw;
+  }
+}
+
+.player .play-button-lg::before {
+  content: "\f144";
+}
+
+.player .play-button-lg.pause::before {
+  content: "\f28b";
+}
+
+.player .play-button::before {
+  content: "\f04b";
+}
+
+.player .play-button.pause::before {
+  content: "\f04c";
+}
+
+.player .controls .toolbar .fullscreen-button::before {
+  content: "\f065";
+}
+
+.player .controls .toolbar .fullscreen-button.fullscreen::before {
+  content: "\f066";
+}
+
+.player .controls .toolbar .mute-button::before {
+  content: "\f028";
+}
+
+.player .controls .toolbar .mute-button.muted::before {
+  content: "\f6a9";
+}
+
+.player .controls .toolbar .settings-button::before {
+  content: "\f013";
+}
+
+.player .controls .toolbar .butts-button::before {
+  content: "\f619";
+}
+
+.player button {
+  cursor: pointer;
+  transition: text-shadow 0.1s linear;
+  border: none;
+  color: white;
+
+}
+
+.player button:hover {
+  text-shadow: 0px 0px 10px #fff;
+  transition: text-shadow 0.1s linear;
+}
+
+.player .play-button-lg {
+  visibility: visible;
+  background-color: transparent;
+  position: relative;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-repeat: no-repeat;
+  background-size: cover; 
+  font-family: "Font Awesome 5 Free";
+  font-weight: 900;
+  font-size: 200px;
+  text-align: justify;
+  cursor: default;
+}
+
+.player .play-button-lg.pause {
+  visibility: hidden;
+  opacity: 0.0;
+
+  transition: opacity 0.5s linear, visibility 0.5s;
+}
+
+.player .play-button-lg.pulse {
+  animation: play-button-lg-pulse 2s infinite;
+}
+
+@keyframes play-button-lg-pulse {
+  0% {
+    color: orange;
+    text-shadow: 0px 0px 20px red;
+  }
+  50% {
+    color: red;
+    text-shadow: 0px 0px 100px red;
+  }
+  100% {
+    color: orange;
+    text-shadow: 0px 0px 20px red;
+  }
+}
+
+.player .play-button-lg:active {
+  font-size: 185px;
+  text-shadow: 0px 0px 10px #fff;
+}
+
+.player .play-button-lg:focus {
+  outline: 0 !important;
+  box-shadow: none;
+}
+
+input[type=range].timeline {
+  -webkit-appearance: none;
+  margin: 5px 0;
+}
+
+input[type=range].timeline:focus {
+  outline: none;
+}
+
+input[type=range].timeline::-webkit-slider-runnable-track {
+  width: 100%;
+  cursor: pointer;
+  box-shadow: 0px 0px 0px #000000, 0px 0px 0px #0d0d0d;
+  background: #ffffff;
+  border-radius: 0px;
+  border: 1px solid #000000;
+}
+
+input[type=range].timeline::-webkit-slider-thumb {
+  box-shadow: 0px 0px 0.1px #000000, 0px 0px 0px #0d0d0d;
+  border: 1.8px solid #00001e;
+  background: #ffffff;
+  cursor: pointer;
+  -webkit-appearance: none;
+}
+
+input[type=range].timeline:focus::-webkit-slider-runnable-track {
+  background: #ffffff;
+}
+
+input[type=range].timeline::-moz-range-track {
+  width: 100%;
+  cursor: pointer;
+  box-shadow: 0px 0px 0px #000000, 0px 0px 0px #0d0d0d;
+  background: #ffffff;
+  border-radius: 0px;
+  border: 1px solid #000000;
+}
+
+input[type=range].timeline::-moz-range-thumb {
+  box-shadow: 0px 0px 0.1px #000000, 0px 0px 0px #0d0d0d;
+  border: 1.8px solid #00001e;
+  background: #ffffff;
+  cursor: pointer;
+}
+
+input[type=range].timeline::-ms-track {
+  width: 100%;
+  cursor: pointer;
+  background: transparent;
+  border-color: transparent;
+  color: transparent;
+}
+
+input[type=range].timeline::-ms-fill-lower {
+  background: #f2f2f2;
+  border: 1px solid #000000;
+  border-radius: 0px;
+  box-shadow: 0px 0px 0px #000000, 0px 0px 0px #0d0d0d;
+}
+
+input[type=range].timeline::-ms-fill-upper {
+  background: #ffffff;
+  border: 1px solid #000000;
+  border-radius: 0px;
+  box-shadow: 0px 0px 0px #000000, 0px 0px 0px #0d0d0d;
+}
+
+input[type=range].timeline::-ms-thumb {
+  box-shadow: 0px 0px 0.1px #000000, 0px 0px 0px #0d0d0d;
+  border: 1.8px solid #00001e;
+  background: #ffffff;
+  cursor: pointer;
+  height: 5px;
+}
+
+input[type=range].timeline:focus::-ms-fill-lower {
+  background: #ffffff;
+}
+
+input[type=range].timeline:focus::-ms-fill-upper {
+  background: #ffffff;
+}
+

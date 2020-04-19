@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <!-- Required meta tags -->
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+  <!-- Bootstrap CSS -->
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css" integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">
+  <link rel="shortcut icon" href="/static/logo_small.png">
+  
+  <title>Upload a movie</title>
+</head>
+
+<body>
+
+  <div class="container">
+    <div class="row">
+      <div class="col">
+
+        <div class="mb-3 mt-3">
+          <h2 class="mb-3" style="font-weight: 300">Upload video</h2>
+
+
+          <label id="progress_status"></label>
+          <div class="progress mb-3">
+            <div id="progress" class="progress-bar" role="progressbar"></div>
+          </div>
+
+          <div class="form-row">
+            <div class="col-7">
+              <input type="text" class="form-control" id="file-name" placeholder="Filename" disabled>
+            </div>
+            <div class="col-1">
+              <button type="button" class="btn btn-primary" id="file-picker">Browse</button>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="col-2">
+              <button id="upload_btn" class="btn btn-primary">Upload</button>
+              <a href="/" id="back_btn" class="btn btn-success" role="button" style="display: none;">go back</a>
+            </div>
+          </div>
+
+          <button class="btn btn-primary d-none" id="loading_btn" type="button" disabled>
+            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+            Uploading...
+          </button>
+
+          <button type="button" id="cancel_btn" class="btn btn-secondary d-none">Cancel upload</button>
+        </div>
+        <div id="alert" class="alert alert-danger" role="alert" style="visibility: hidden;"></div>
+
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/resumablejs@1.1.0/resumable.min.js"></script>
+  <script>
+
+    function upload() {
+      uploader.upload();
+      document.getElementById('alert').style.visibility = "hidden";
+      document.getElementById('file-picker').disabled = true;
+      document.getElementById('upload_btn').disabled = true;
+    }
+
+    var success = false;
+    var uploader = new Resumable({
+      target: '/videos/{{ video["id"] }}/resumable_upload', 
+      simultaneousUploads: 1,
+      prioritizeFirstAndLastChunk: true,
+      chunkSize: 5 * 1024 * 1024,
+      maxFiles: 1
+    });
+
+    uploader.assignBrowse(document.getElementById('file-picker'));
+    uploader.on('fileAdded', function(file) {
+      console.log(file.fileName);
+      document.getElementById('file-name').value = file.fileName;
+      document.getElementById('upload_btn').addEventListener("click", upload);
+    });
+
+    uploader.on('fileProgress', function(file) {
+      var progress = document.getElementById('progress');
+      progress.innerHTML = "" + (file.progress() * 100).toFixed(2) + "%";
+      progress.style.width = "" + file.progress() * 100 + "%";
+    });
+
+    uploader.on('complete', function() {
+      if (success) {
+        document.getElementById('upload_btn').style.display = "none";
+        document.getElementById('back_btn').style.display = "block";
+      }
+    });
+
+    uploader.on('error', function(message, file) {
+      var progress = document.getElementById('progress');
+      m = JSON.parse(message).message;
+      document.getElementById('alert').innerHTML = m;
+      document.getElementById('alert').style.visibility = "visible";
+      document.getElementById('file-picker').disabled = false;
+      document.getElementById('upload_btn').disabled = false;
+      document.getElementById('back_btn').style.display = "none";
+      document.getElementById('upload_btn').style.display = "block";
+
+      progress.innerHTML = "";
+      progress.style.width = "0%";
+    });
+
+    uploader.on('fileSuccess', function(file) {
+      success = true;
+    });
+  </script>
+</body>
+</html>

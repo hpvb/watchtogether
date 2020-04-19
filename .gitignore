@@ -1,0 +1,10 @@
+._sync*
+__pycache__
+*.pyc
+*.swo
+*.swp
+*.bak
+movies
+migrate.py
+logo_small.png
+logo_large.png

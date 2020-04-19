@@ -1,0 +1,39 @@
+body {
+  margin: 0;
+  padding: 0;
+  background-color: black;
+}
+
+.player {
+  width: 100%;
+  height: 100%;
+}
+
+.login {
+  position: absolute;
+
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.8);
+
+  z-index: 9999;
+}
+
+.login-form {
+  position: absolute;
+  padding: 10px;
+  background-color: white;
+  border-radius: 15px;
+  text-align: center;
+  border: 0;
+
+  top: 50%;
+  left: 50%;
+
+  transform: translate(-50%, -50%);
+  box-shadow: 5px 0px 30px 40px rgb(255, 255, 255);
+}
+
+.login-form input {
+  margin: auto;
+}

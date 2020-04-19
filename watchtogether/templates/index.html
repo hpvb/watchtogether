@@ -1,0 +1,119 @@
+<html>
+<head>
+  <title>{{ config['TITLE'] }}</title>
+  <script src="https://code.jquery.com/jquery-3.4.1.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+  <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+  <link rel="shortcut icon" href="/static/logo_small.png">
+</head>
+
+<body>
+<div class="container">
+  <div class="jumbotron jumbotron-fluid">
+    <div class="container">
+      <div class="row">
+        <div class="col-lg-2">
+          <img src="/static/logo_large.png" width=100%>
+        </div>
+        <div class="col-lg-6">
+          <h1 class="display-4">{{ config['TITLE'] }}</h1>
+          <p class="lead">Select a room from the list below or upload a video file.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="content">
+    <input type="text" class="form-control mb-2 mr-sm-2" id="video-title" placeholder="My awesome movie">
+    <button type="submit" class="btn btn-primary mb-2" id="create-button">Create</button>
+    <h2> My videos </h2>
+    <table class="table" id="videos">
+      <thead>
+        <tr>
+          <th scope="col">Room name</th> 
+          <th scope="col">Status</th> 
+          <th scope="col">Edit</th> 
+          <th scope="col">Watch</th> 
+          <th scope="col">Delete</th> 
+        </tr>
+      </thead>
+      <tbody>
+      </tbody>
+    </table>
+  </div>
+</div>
+</body>
+
+<script type="text/javascript">
+
+window.addEventListener("load", initialize); 
+
+function initialize() {
+  window.setInterval(load_videos, 10000);
+  document.getElementById("create-button").addEventListener("click", create_video);
+  load_videos();
+}
+
+function create_video(event) {
+  title = document.getElementById("video-title").value
+  if (! title) {
+    return;
+  }
+
+  $.ajax({
+    url: '/api/videos/', 
+    type: 'PUT',
+    data: JSON.stringify({'title': title }),
+    contentType: "application/json",
+    success: function(video) {
+      console.log(video);
+      window.location.href = '/videos/' + video.id;
+    }
+  });
+  
+}
+
+function delete_video(url, video_id) {
+  $.ajax({
+    url: url, 
+    type: 'DELETE',
+    success: function(result) {
+      $('#' + video_id).remove();
+    }
+  });
+}
+
+function load_videos() {
+  $.getJSON( "/api/videos/", function(data) {
+
+    $('#videos tbody').empty();
+    var table_contents = '';
+    data.forEach(function(video, i) { 
+      var video_state = 'disabled';
+      var table_class = 'error';
+      var spinner = '';
+      var del = 'onclick="delete_video(\'' + video.url  + '\', \'' + video.id + '\');"';
+
+      if (video['encoding_status'] == 'ready') {
+        video_state = '';
+        table_class = 'success';
+      } else if (video['encoding_status'] == 'encoding') {
+        table_class = 'info';
+        spinner = '<span class="spinner-border spinner-border-sm" role="status"></span>';
+        del = '';
+      }
+
+      table_contents += 
+        '<tr id="' + video['id'] + '" class="table-' + table_class + '">' + 
+          '<td>' + video['title'] + '</td>' +
+          '<td>' + spinner + '&nbsp;' + video['encoding_status'] + '</td>' +
+          '<td><a href="/videos/' + video.id + '" class="btn btn-primary btn-sm" role="button">Edit</a></td>' +
+          '<td><a href="/watch/' + video['id'] + '" class="btn btn-primary btn-sm ' + video_state  + '" role="button">Watch</a></td>' +
+          '<td><button ' + del + ' id="delete_btn" class="btn btn-danger btn-sm ' + video_state  + '">Delete</button></td>' +
+        '</tr>';
+    });
+    $('#videos tbody').html(table_contents);
+  });
+}
+</script>
+</html>

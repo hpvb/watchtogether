@@ -1,0 +1,43 @@
+<!DOCTYPE html> 
+
+<html>
+  <head>
+    <title>{{ config['TITLE'] }}</title>
+    <link rel="shortcut icon" href="/static/logo_small.png">
+    <link rel="stylesheet" href="/static/chat.css">
+  </head>
+
+  <body>
+    <div class="chat" id="chat">
+    </div>
+
+    <script src="/static/socket.io.js"></script>
+    <script src="/static/sync.js"></script>
+    <script src="/static/chat.js"></script>
+
+    <script>
+
+    var room = '{{video['id']}}';
+
+    var urlParams = new URLSearchParams(window.location.search);
+    var username = null;
+    var sync = null;
+    var chat = null;
+    var rootelement = document.getElementById("chat");
+
+    if (urlParams.has('username')) {
+      username = urlParams.get('username');
+    } else {
+      rootelement.innerHTML = "No username specified. Please use the popout button"
+    }
+
+    document.addEventListener("DOMContentLoaded", function(event) {
+      if (username) {
+        sync = new Sync(null);
+        chat = new Chat(sync, null, rootelement, room, username);
+      }
+    });
+
+    </script>
+  </body>
+</html>

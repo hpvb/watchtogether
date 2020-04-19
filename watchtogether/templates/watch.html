@@ -1,0 +1,78 @@
+<!DOCTYPE html> 
+
+<html>
+  <head>
+    <title>{{ config['TITLE'] }}</title>
+    <link rel="shortcut icon" href="/static/logo_small.png">
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="/static/player.css">
+    <link rel="stylesheet" href="/static/player-chat.css">
+  </head>
+
+  <body>
+    <div class="login" id="login">
+      <div class="login-form">
+        <span> Please select a username for the chat </span> <br>
+        <form id="login-form">
+          <input type="text" id="username" placeholder="My fabulous username" disabled>
+        </form>
+        <button class="login-button" id="login-button" disabled>Go!</button> <br>
+      </div>
+    </div>
+
+    <video class="sync-player" id="player" width="{{video.width}}px" height="{{video.height}}px">
+    </video>
+
+    <script src="/static/socket.io.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <script src="https://cdn.dashjs.org/latest/dash.all.min.js"></script>
+    <script src="/static/player.js"></script>
+    <script src="/static/sync.js"></script>
+    <script src="/static/chat.js"></script>
+
+    <script>
+
+    var room = '{{video.id}}';
+    var video = null;
+    var username = null;
+    var player = null;
+    var sync = null;
+    var chat = null;
+
+    document.addEventListener("DOMContentLoaded", function(event) {
+      video = document.getElementById('player'); 
+      player = new VideoPlayer(video);
+      sync = new Sync(player);
+
+      if (username) {
+        chat = new Chat(sync, player.rootelement, room, username);
+      }
+
+      player.set_stream("{{baseurl}}{{video.playlist}}");
+      video.addEventListener("canplay", enable_login);
+    });
+
+    function enable_login() {
+      document.getElementById("login-button").addEventListener("click", login);
+      document.getElementById("login-form").addEventListener("submit", login);
+      document.getElementById("username").disabled = false;
+      document.getElementById("login-button").disabled = false;
+      document.getElementById("username").focus();
+    }
+
+    function login(event) {
+      event.preventDefault();
+      player.tickle();
+
+      control = document.getElementById("username");
+      if (! control.value) return;
+
+      username = control.value;
+      if (! chat) {
+        chat = new Chat(sync, player, null, room, username);
+      }
+      document.getElementById("login").style.visibility = "hidden";
+    }
+    </script>
+  </body>
+</html>
