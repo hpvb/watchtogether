@@ -1,4 +1,5 @@
-= Watch Together
+Watch Together
+--------------
 
 A simple Python application to watch movies together with your friends. See `config/settings.py` for knobs. See Dockerfile for dependencies on F31.
 
