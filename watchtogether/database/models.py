@@ -8,7 +8,7 @@ from watchtogether.database import Base
 from datetime import datetime
 
 def generate_id():
-    return random_string(15)
+    return random_string(10)
 
 class WatchtogetherBase(object):
     id = Column(String(10), primary_key=True, default=generate_id)
