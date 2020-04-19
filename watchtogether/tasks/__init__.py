@@ -178,6 +178,7 @@ def transcode(tmpfile, streaminfo, video_id):
     tmpdir = tempfile.mkdtemp()
     socketfile = os.path.join(tmpdir, 'progress')
     sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+    sock.settimeout(0.2)
     sock.bind(socketfile)
     sock.listen(1)
 
@@ -206,11 +207,11 @@ def transcode(tmpfile, streaminfo, video_id):
 
     ffmpeg = multiprocessing.Process(target=run_ffmpeg, args=(transcode_command, f'{tmpfile}.log'))
     ffmpeg.start()
-    connection, client_address = sock.accept()
     percentage = 0
     speed = 0
 
     try:
+        connection, client_address = sock.accept()
         while True:
             data = connection.recv(1024)
             if data:
@@ -228,6 +229,8 @@ def transcode(tmpfile, streaminfo, video_id):
                 db_session.commit()
             else:
                 break
+    except socket.timeout:
+       pass
 
     finally:
         ffmpeg.terminate()
