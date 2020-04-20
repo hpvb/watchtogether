@@ -13,9 +13,9 @@ Base = declarative_base()
 
 db = SQLAlchemy()
 
-def init_engine(uri, **kwargs):
+def init_engine(uri):
     global engine
-    engine = create_engine(uri, **kwargs)
+    engine = create_engine(uri, encoding='utf-8')
     return engine
 
 def init_db():

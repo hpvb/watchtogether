@@ -151,6 +151,10 @@
         var progress = document.getElementById('encode_progress');
         progress.innerHTML = "" + video.encoding_progress + "% " + "(" + video.encoding_speed + "x)";
         progress.style.width = "" + video.encoding_progress + "%";
+  
+        if (document.getElementById('file-name').value == "") {
+          document.getElementById('file-name').value = video.orig_file_name;
+        }
 
         if (video.status == 'file-waiting') {
             var progress = document.getElementById('upload_progress');
@@ -196,7 +200,6 @@
         }
 
         switch(video.status) {
-          case 'file-waiting':
           case 'file-uploading':
           case 'encoding':
           case 'start-encoding':
@@ -204,6 +207,7 @@
             document.getElementById('encode_btn').removeEventListener('click', encode);
             document.getElementById('picker_btn').disabled = true;
             break;
+          case 'file-waiting':
           case 'ready':
           case 'file-uploaded':
           case 'error':

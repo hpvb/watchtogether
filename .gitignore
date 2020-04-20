@@ -4,6 +4,7 @@ __pycache__
 *.swo
 *.swp
 *.bak
+db/
 movies
 migrate.py
 logo_small.png

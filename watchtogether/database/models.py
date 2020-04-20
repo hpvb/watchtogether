@@ -4,7 +4,7 @@ from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.orm import relationship, backref, foreign
 
 from watchtogether.util import random_string
-from watchtogether.database import Base
+from . import Base
 from datetime import datetime
 
 def generate_id():
@@ -22,7 +22,7 @@ class Subtitle(Base):
     __tablename__ = 'subtitle'
 
     id = Column(Integer, primary_key=True)
-    video_id = Column(String, ForeignKey('video.id'), nullable=False)
+    video_id = Column(String(10), ForeignKey('video.id'), nullable=False)
 
     language = Column(String(5), nullable=False, default='eng')
     orig_file = Column(Text, nullable=False)    
@@ -45,5 +45,6 @@ class Video(WatchtogetherBase, Base):
     default_subtitles = Column(Boolean, default=False)
     version = Column(Integer, nullable=False, default=0)
     orig_file = Column(Text)
+    orig_file_name = Column(Text)
     playlist = Column(Text)
     subtitles = relationship('Subtitle', backref='Video', lazy=True)

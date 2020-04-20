@@ -56,6 +56,7 @@ class VideoFile(Resource):
         resumableTotalChunks = request.form.get('resumableTotalChunks', type=int)
         resumableChunkNumber = request.form.get('resumableChunkNumber', default=1, type=int)
         resumableIdentfier = request.form.get('resumableIdentifier', default='error', type=str)
+        resumableFilename = request.form.get('resumableFilename', default='error', type=str)
 
         if not resumableIdentfier or not resumableChunkNumber:
             return {'message': 'Parameter error'}, 500
@@ -105,4 +106,5 @@ class VideoFile(Resource):
             video.status = 'file-uploaded'
             video.encoding_progress = 0
             video.orig_file = target_file_name
+            video.orig_file_name = resumableFilename
             db_session.commit()

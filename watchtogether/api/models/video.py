@@ -28,6 +28,7 @@ video_fields = {
     'status': fields.String,
     'tune': fields.String,
     'default_subtitles': fields.Boolean,
+    'orig_file_name': fields.String
 }
 
 def VideoTuneParser(value):
