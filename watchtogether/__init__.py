@@ -107,7 +107,6 @@ class Timer:
 def create_app():
     app = Flask(__name__, instance_relative_config=True)
     app.config.from_object('watchtogether.config.settings')
-    app.wsgi_app = ProxyFix(app.wsgi_app)
 
     try:
         from flask_cors import CORS
@@ -131,5 +130,6 @@ def create_app():
     def shutdown_session(exception=None):
         db_session.remove()
 
+    app.wsgi_app = ProxyFix(app.wsgi_app)
     return app
 
