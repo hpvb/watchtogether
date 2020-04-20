@@ -27,14 +27,17 @@ class VideoFile(Resource):
         if not video:
             return {'message': 'Video not found'}, 403
 
-        resumableIdentfier = request.args.get('resumableIdentifier', type=str)
+        resumableIdentifier = request.args.get('resumableIdentifier', type=str)
         resumableChunkNumber = request.args.get('resumableChunkNumber', type=int)
 
-        if not resumableIdentfier or not resumableChunkNumber:
+        if not resumableIdentifier or not resumableChunkNumber:
             return {'message': 'Parameter error'}, 500
 
+        if video.upload_identifier != resumableIdentifier:
+            return {'message': 'Unknown uploader session'}, 404
+
         # chunk path based on the parameters
-        temp_dir = os.path.join(app.config['MOVIE_PATH'], video.id, 'tmp', resumableIdentfier)
+        temp_dir = os.path.join(app.config['MOVIE_PATH'], video.id, 'tmp', resumableIdentifier)
         chunk_name = get_chunk_name('orig', resumableChunkNumber)
         chunk_file = os.path.join(temp_dir, chunk_name)
         print(f'Getting chunk: {chunk_file}')
@@ -55,26 +58,33 @@ class VideoFile(Resource):
 
         resumableTotalChunks = request.form.get('resumableTotalChunks', type=int)
         resumableChunkNumber = request.form.get('resumableChunkNumber', default=1, type=int)
-        resumableIdentfier = request.form.get('resumableIdentifier', default='error', type=str)
+        resumableIdentifier = request.form.get('resumableIdentifier', default='error', type=str)
         resumableFilename = request.form.get('resumableFilename', default='error', type=str)
 
-        if not resumableIdentfier or not resumableChunkNumber:
+        if not resumableIdentifier or not resumableChunkNumber:
             return {'message': 'Parameter error'}, 500
 
         if video.status == 'file-waiting' and resumableChunkNumber == 1:
             video.status = 'file-uploading'
-            video.upload_identifier = resumableIdentfier
+            video.upload_identifier = resumableIdentifier
             db_session.commit()
 
+        if video.status == 'file-waiting' and resumableChunkNumber != 1:
+            if video.upload_identfier == resumableIdentifier:
+                video.status = 'file-uploading'
+                db_session.commit()
+            else:
+                return {'message': 'Unknown uploader session'}, 500
+
         if video.status == 'file-uploading':
-            if video.upload_identifier != resumableIdentfier:
+            if video.upload_identifier != resumableIdentifier:
                 return {'message': 'Different upload already in progress'}, 409
 
         # get the chunk data
         chunk_data = request.files['file']
 
         # make our temp directory
-        temp_dir = os.path.join(app.config['MOVIE_PATH'], video.id, 'tmp', resumableIdentfier)
+        temp_dir = os.path.join(app.config['MOVIE_PATH'], video.id, 'tmp', resumableIdentifier)
         if not os.path.isdir(temp_dir):
             os.makedirs(temp_dir)
 
