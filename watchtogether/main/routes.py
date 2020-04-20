@@ -67,6 +67,10 @@ def resumable_post(video_id):
     resumableChunkNumber = request.form.get('resumableChunkNumber', default=1, type=int)
     resumableIdentfier = request.form.get('resumableIdentifier', default='error', type=str)
 
+    if not resumableIdentfier or not resumableChunkNumber:
+        # Parameters are missing or invalid
+        abort(500, 'Parameter error')
+
     # get the chunk data
     chunk_data = request.files['file']
 

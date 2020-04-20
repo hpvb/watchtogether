@@ -2,6 +2,7 @@
 
 import os
 import glob
+import json
 import shutil
 import socket
 import threading
@@ -73,11 +74,20 @@ def run_ffmpeg(command, logfile):
         output = subprocess.run(command, stderr=lf)
 
 @celery.task
-def transcode(tmpfile, streaminfo, video_id):
+def transcode(video_id):
+    video = db_session.query(models.Video).filter_by(id=video_id).one_or_none()
+    try:
+        transcode_video(video)
+    except Exception as e:
+        video.status = 'error'
+        db_session.commit()
+        raise e
+    
+def transcode_video(video):
     status = 'error'
     output = ""
 
-    outdir = f"{celery.conf.get('MOVIE_PATH')}/{video_id}"
+    outdir = f"{celery.conf.get('MOVIE_PATH')}/{video.id}"
     shutil.rmtree(outdir, ignore_errors = True)
     os.mkdir(outdir)
 
@@ -96,7 +106,21 @@ def transcode(tmpfile, streaminfo, video_id):
     audio_streamidx = -1
     has_audio = False
 
-    video = db_session.query(models.Video).filter_by(id=video_id).one_or_none()
+    orig_file = video.orig_file
+
+    cmd = f'ffprobe -v quiet -show_streams -show_format -print_format json {orig_file}'
+    streaminfo = os.popen(cmd).read()
+    streaminfo = json.loads(streaminfo)
+
+    for stream in streaminfo['streams']:
+        if stream['codec_type'] == 'video':
+            vcodec = stream['codec_name']
+
+    if vcodec == "":
+        video.status = 'error'
+        video.status_message = 'Uploaded file was not a video file'
+        db_session.commit()
+        return
 
     duration = float(streaminfo['format']['duration'])
     for stream in streaminfo['streams']:
@@ -182,7 +206,7 @@ def transcode(tmpfile, streaminfo, video_id):
     sock.bind(socketfile)
     sock.listen(1)
 
-    transcode_command = ['ffmpeg', '-y', '-nostdin', '-i', f'{tmpfile}', '-progress', f'unix://{socketfile}', '-loglevel', '24']
+    transcode_command = ['ffmpeg', '-y', '-nostdin', '-i', f'{orig_file}', '-progress', f'unix://{socketfile}', '-loglevel', '24']
     dash_command = ['MP4Box', '-dash', f'{dash_size * 1000}', '-rap', '-frag-rap', '-min-buffer', '16000', '-profile', 'dashavc264:onDemand', '-mpd-title', video.title ,'-out', master_playlist]
     tmpfiles = []
     for num, f in enumerate(video_formats):
@@ -202,10 +226,10 @@ def transcode(tmpfile, streaminfo, video_id):
         dash_command.append(filename)
         tmpfiles.append(filename)
 
-    video.encoding_status = 'encoding'
+    video.status = 'encoding'
     db_session.commit()
 
-    ffmpeg = multiprocessing.Process(target=run_ffmpeg, args=(transcode_command, f'{tmpfile}.log'))
+    ffmpeg = multiprocessing.Process(target=run_ffmpeg, args=(transcode_command, f'{orig_file}.log'))
     ffmpeg.start()
     percentage = 0
     speed = 0
@@ -275,10 +299,10 @@ def transcode(tmpfile, streaminfo, video_id):
         shutil.rmtree(outdir, ignore_errors = True)
         print("Done uploading")
 
-    video.playlist = f'{video_id}/playlist.mpd'
+    video.playlist = f'{video.id}/playlist.mpd'
     video.width = vwidth
     video.height = vheight
     video.duration = duration
-    video.encoding_status = status
+    video.status = status
     db_session.commit()
 

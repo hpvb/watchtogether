@@ -19,26 +19,29 @@ class WatchtogetherBase(object):
     poster = Column(LargeBinary)
 
 class Subtitle(Base):
-    __tablename__ = "subtitle"
+    __tablename__ = 'subtitle'
 
     id = Column(Integer, primary_key=True)
     video_id = Column(String, ForeignKey('video.id'), nullable=False)
 
-    language = Column(String(5), nullable=False, default="eng")
+    language = Column(String(5), nullable=False, default='eng')
     orig_file = Column(Text, nullable=False)    
 
 class Video(WatchtogetherBase, Base):
-    __tablename__ = "video"
+    __tablename__ = 'video'
     
     encoding_progress = Column(Integer)
     encoding_speed = Column(Integer)
-    encoding_status = Column(String(15))
+    status = Column(String(15), default='file-waiting')
+    status_message = Column(Text)
 
     width = Column(Integer, nullable=False, default=0)
     height = Column(Integer, nullable=False, default=0)
     duration = Column(Float, nullable=False, default=0)
 
-    tune = Column(String(15), nullable=False, default="film")
+    upload_identifier = Column(Text)
+
+    tune = Column(String(15), nullable=False, default='film')
     default_subtitles = Column(Boolean, default=False)
     version = Column(Integer, nullable=False, default=0)
     orig_file = Column(Text)

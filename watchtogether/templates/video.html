@@ -2,45 +2,72 @@
 <html lang="en">
 
 <head>
-  <!-- Required meta tags -->
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-  <!-- Bootstrap CSS -->
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css" integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">
+  <link rel="stylesheet" href="/static/video.css">
   <link rel="shortcut icon" href="/static/logo_small.png">
   
+  <script src="https://code.jquery.com/jquery-3.4.1.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
+
   <title>Upload a movie</title>
 </head>
 
 <body>
+  <nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <a class="navbar-brand" href="/">
+      <img src="/static/logo_small.png" width="30" height="30" class="d-inline-block align-top" alt="">
+    </a>
+
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav">
+        <li class="nav-item active">
+          <a class="nav-link" href="/">Videos</a>
+        </li>
+      </ul>
+    </div>
+  </nav>
 
   <div class="container">
     <div class="row">
       <div class="col">
 
         <div class="mb-3 mt-3">
-          <h2 class="mb-3" style="font-weight: 300">Upload video</h2>
-
-
-          <label id="progress_status"></label>
-          <div class="progress mb-3">
-            <div id="progress" class="progress-bar" role="progressbar"></div>
-          </div>
-
-          <div class="form-row">
-            <div class="col-7">
-              <input type="text" class="form-control" id="file-name" placeholder="Filename" disabled>
+          <div class="stauts">
+            <span>Upload progress</span>
+            <div class="progress mb-3">
+              <div id="upload_progress" class="progress-bar" role="progressbar"></div>
             </div>
-            <div class="col-1">
-              <button type="button" class="btn btn-primary" id="file-picker">Browse</button>
+            <span>Encode progress</span>
+            <div class="progress mb-3">
+              <div id="encode_progress" class="progress-bar" role="progressbar"></div>
             </div>
           </div>
+          <div class="input-group">
+            <div class="input-group-prepend">
+              <span class="input-group-text" id="">Title</span>
+            </div>
+            <input type="text" class="form-control" id="title">
+            <div class="input-group-append">
+              <button class="btn btn-outline-secondary" type="button" id="title_btn" disabled>Save</button>
+            </div>
+          </div>
 
+          <div class="input-group">
+            <div class="input-group-prepend">
+              <span class="input-group-text" id="">File</span>
+            </div>
+            <input type="text" class="form-control" id="file-name" placeholder="Filename" disabled>
+            <div class="input-group-append">
+              <button class="btn btn-outline-secondary" type="button" id="picker_btn" disabled>Browse</button>
+              <button class="btn btn-outline-secondary" type="button" id="upload_btn" disabled>Upload</button>
+            </div>
+          </div>
+          
           <div class="form-row">
             <div class="col-2">
-              <button id="upload_btn" class="btn btn-primary">Upload</button>
-              <a href="/" id="back_btn" class="btn btn-success" role="button" style="display: none;">go back</a>
+              <button id="encode_btn" class="btn btn-primary" style="display: none;">Encode</button>
             </div>
           </div>
 
@@ -59,60 +86,156 @@
 
   <script src="https://cdn.jsdelivr.net/npm/resumablejs@1.1.0/resumable.min.js"></script>
   <script>
+    window.addEventListener("load", initialize); 
+
+    var video = null;
+    var uploader = null;
+
+    function initialize() {
+      window.setInterval(load_video, 1000);
+      load_video();
+    }
+
+    function load_video() {
+      $.getJSON( "/api/videos/{{ video.id }}", function(data) {
+        video = data;
+
+        document.getElementById('title').value = video.title;
+
+        switch(video.status) {
+          case "file-waiting":
+          case "file-uploading":
+          case "wait-encoding":
+          case "encoding":
+            var progress = document.getElementById('encode_progress');
+            progress.innerHTML = "" + video.encoding_progress + "% " + "(" + video.encoding_speed + "x)";
+            progress.style.width = "" + video.encoding_progress + "%";
+          case "start-encoding":
+            document.getElementById('title_btn').disabled = true;
+            document.getElementById('title_btn').removeEventListener('click', save_title);
+            document.getElementById('encode_btn').style.display = "none";
+            document.getElementById('encode_btn').removeEventListener('click', encode);
+            document.getElementById('picker_btn').disabled = true;
+            break;
+          case "ready":
+            var progress = document.getElementById('encode_progress');
+            progress.innerHTML = "100%";
+            progress.style.width = "100%";
+          case "file-uploaded":
+            document.getElementById('title_btn').disabled = false;
+            document.getElementById('title_btn').addEventListener('click', save_title);
+            document.getElementById('encode_btn').style.display = "block";
+            document.getElementById('encode_btn').addEventListener('click', encode);
+            var progress = document.getElementById('upload_progress');
+            progress.innerHTML = "100%";
+            progress.style.width = "100%";
+            progress = document.getElementById('encode_progress');
+            progress.innerHTML = "0%";
+            progress.style.width = "0%";
+            document.getElementById('picker_btn').disabled = false;
+        }
+
+        if (! uploader) {
+          create_uploader(video.file_url);
+        }
+      });
+    }
+
+    function encode() {
+      $.ajax({
+        url: video.url, 
+        type: 'POST',
+        data: JSON.stringify({'status': 'start-encoding'}),
+        contentType: "application/json",
+        success: function(video) {
+          console.log(video);
+          document.getElementById('encode_btn').style.display = 'none';
+        },
+        error: function(error) {
+          console.log(video);
+          document.getElementById('alert').innerHTML = error.message;
+        }
+      });
+    }
 
     function upload() {
       uploader.upload();
+
       document.getElementById('alert').style.visibility = "hidden";
-      document.getElementById('file-picker').disabled = true;
+      document.getElementById('picker_btn').disabled = true;
       document.getElementById('upload_btn').disabled = true;
     }
 
-    var success = false;
-    var uploader = new Resumable({
-      target: '/videos/{{ video["id"] }}/resumable_upload', 
-      simultaneousUploads: 1,
-      prioritizeFirstAndLastChunk: true,
-      chunkSize: 5 * 1024 * 1024,
-      maxFiles: 1
-    });
-
-    uploader.assignBrowse(document.getElementById('file-picker'));
-    uploader.on('fileAdded', function(file) {
-      console.log(file.fileName);
-      document.getElementById('file-name').value = file.fileName;
-      document.getElementById('upload_btn').addEventListener("click", upload);
-    });
-
-    uploader.on('fileProgress', function(file) {
-      var progress = document.getElementById('progress');
-      progress.innerHTML = "" + (file.progress() * 100).toFixed(2) + "%";
-      progress.style.width = "" + file.progress() * 100 + "%";
-    });
-
-    uploader.on('complete', function() {
-      if (success) {
-        document.getElementById('upload_btn').style.display = "none";
-        document.getElementById('back_btn').style.display = "block";
+    function save_title() {
+      title = document.getElementById('title').value;
+      if (! title) {
+        return;
       }
-    });
 
-    uploader.on('error', function(message, file) {
-      var progress = document.getElementById('progress');
-      m = JSON.parse(message).message;
-      document.getElementById('alert').innerHTML = m;
-      document.getElementById('alert').style.visibility = "visible";
-      document.getElementById('file-picker').disabled = false;
-      document.getElementById('upload_btn').disabled = false;
-      document.getElementById('back_btn').style.display = "none";
-      document.getElementById('upload_btn').style.display = "block";
+      $.ajax({
+        url: video.url, 
+        type: 'POST',
+        data: JSON.stringify({'title': title}),
+        contentType: "application/json",
+        success: function(video) {
+          document.getElementById('title').value = video.title;
+        },
+        error: function(error) {
+          console.log(video);
+          document.getElementById('alert').innerHTML = error.message;
+        }
+      });
+    }
 
-      progress.innerHTML = "";
-      progress.style.width = "0%";
-    });
+    function create_uploader(target) {
+      uploader = new Resumable({
+        target: target,
+        simultaneousUploads: 1,
+        prioritizeFirstAndLastChunk: true,
+        chunkSize: 5 * 1024 * 1024,
+        maxFiles: 1
+      });
 
-    uploader.on('fileSuccess', function(file) {
-      success = true;
-    });
+      uploader.assignBrowse(document.getElementById('picker_btn'));
+      uploader.on('fileAdded', function(file) {
+        console.log(file.fileName);
+        document.getElementById('file-name').value = file.fileName;
+        document.getElementById('upload_btn').addEventListener("click", upload);
+        document.getElementById('upload_btn').disabled = false;
+
+      });
+
+      uploader.on('fileProgress', function(file) {
+        var progress = document.getElementById('upload_progress');
+        document.getElementById('upload_btn').disabled = true;
+        document.getElementById('upload_btn').removeEventListener("click", upload);
+        progress.innerHTML = "" + (file.progress() * 100).toFixed(2) + "%";
+        progress.style.width = "" + file.progress() * 100 + "%";
+      });
+
+      uploader.on('complete', function() {
+        if (success) {
+          document.getElementById('upload_btn').disabled = true;
+        }
+      });
+
+      uploader.on('error', function(message, file) {
+        var progress = document.getElementById('upload_progress');
+        m = JSON.parse(message).message;
+        document.getElementById('alert').innerHTML = m;
+        document.getElementById('alert').style.visibility = "visible";
+        document.getElementById('picker_btn').disabled = false;
+
+        progress.innerHTML = "";
+        progress.style.width = "0%";
+      });
+
+      uploader.on('fileSuccess', function(file) {
+        success = true;
+      });
+    }
+
+    var success = false;
   </script>
 </body>
 </html>

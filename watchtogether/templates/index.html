@@ -94,10 +94,10 @@ function load_videos() {
       var spinner = '';
       var del = 'onclick="delete_video(\'' + video.url  + '\', \'' + video.id + '\');"';
 
-      if (video['encoding_status'] == 'ready') {
+      if (video.status == 'ready') {
         video_state = '';
         table_class = 'success';
-      } else if (video['encoding_status'] == 'encoding') {
+      } else if (video.status == 'encoding') {
         table_class = 'info';
         spinner = '<span class="spinner-border spinner-border-sm" role="status"></span>';
         del = '';
@@ -106,7 +106,7 @@ function load_videos() {
       table_contents += 
         '<tr id="' + video['id'] + '" class="table-' + table_class + '">' + 
           '<td>' + video['title'] + '</td>' +
-          '<td>' + spinner + '&nbsp;' + video['encoding_status'] + '</td>' +
+          '<td>' + spinner + '&nbsp;' + video.status + '</td>' +
           '<td><a href="/videos/' + video.id + '" class="btn btn-primary btn-sm" role="button">Edit</a></td>' +
           '<td><a href="/watch/' + video['id'] + '" class="btn btn-primary btn-sm ' + video_state  + '" role="button">Watch</a></td>' +
           '<td><button ' + del + ' id="delete_btn" class="btn btn-danger btn-sm ' + video_state  + '">Delete</button></td>' +

@@ -1,0 +1,7 @@
+.input-group-prepend {
+  width : 150px;
+}
+
+.input-group-prepend span {
+  width: 100%;
+}
