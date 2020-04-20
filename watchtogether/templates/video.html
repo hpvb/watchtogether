@@ -34,40 +34,87 @@
       <div class="col">
 
         <div class="mb-3 mt-3">
-          <div class="stauts">
-            <span>Upload progress</span>
-            <div class="progress mb-3">
-              <div id="upload_progress" class="progress-bar" role="progressbar"></div>
+          <div class="card" id="status_card">
+            <div class="card-header">
+              Video Status
             </div>
-            <span>Encode progress</span>
-            <div class="progress mb-3">
-              <div id="encode_progress" class="progress-bar" role="progressbar"></div>
-            </div>
-          </div>
-          <div class="input-group">
-            <div class="input-group-prepend">
-              <span class="input-group-text" id="">Title</span>
-            </div>
-            <input type="text" class="form-control" id="title">
-            <div class="input-group-append">
-              <button class="btn btn-outline-secondary" type="button" id="title_btn" disabled>Save</button>
+            <div class="card-body">
+              <div id="status">
+              </div>
             </div>
           </div>
 
-          <div class="input-group">
-            <div class="input-group-prepend">
-              <span class="input-group-text" id="">File</span>
+          <div class="card">
+            <div class="card-header">
+              Video Encoding
             </div>
-            <input type="text" class="form-control" id="file-name" placeholder="Filename" disabled>
-            <div class="input-group-append">
-              <button class="btn btn-outline-secondary" type="button" id="picker_btn" disabled>Browse</button>
-              <button class="btn btn-outline-secondary" type="button" id="upload_btn" disabled>Upload</button>
+            <div class="card-body">
+              <span>Encoding Progress</span>
+              <div class="progress mb-3">
+                <div id="encode_progress" class="progress-bar" role="progressbar"></div>
+              </div>
+
+              <div>
+                <div class="form-group row">
+                  <label for="title" class="col-sm-2 col-form-label">Video title</label>
+                  <div class="col-sm-10">
+                    <input type="title" class="form-control" id="title" placeholder="Video title">
+                  </div>
+                </div>
+                <div class="form-group row">
+                  <label for="tune" class="col-sm-2 col-form-label">Encoder tuning</label>
+                  <div class="col-sm-10">
+                    <select id="tune" class="form-control">
+                      <option selected>film</option>
+                      <option>animation</option>
+                      <option>grain</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="form-group row">
+                  <div class="col-sm-10">
+                    <button id="encode_btn" class="btn btn-primary">Encode</button>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
-          
-          <div class="form-row">
-            <div class="col-2">
-              <button id="encode_btn" class="btn btn-primary" style="display: none;">Encode</button>
+
+          <div class="card">
+            <div class="card-header">
+              Video file
+            </div>
+            <div class="card-body">
+              <span>Upload progress</span>
+              <div class="progress mb-3">
+                <div id="upload_progress" class="progress-bar" role="progressbar"></div>
+              </div>
+              <div>
+                <div class="form-group row">
+                  <label for="file-name" class="col-sm-2 col-form-label">Video file</label>
+                  <div class="col-sm-10">
+                    <div class="input-group">
+                      <input type="text" class="form-control" id="file-name" placeholder="Filename" disabled>
+                      <div class="input-group-append">
+                        <button class="btn btn-outline-secondary" type="button" id="picker_btn" disabled>Browse</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="form-group row">
+                  <div class="col-sm-2">Auto-start encoding</div>
+                  <div class="col-sm-10">
+                    <div class="form-check">
+                      <input class="form-check-input" type="checkbox" id="auto_start_encoding">
+                    </div>
+                  </div>
+                </div>
+                <div class="form-group row">
+                  <div class="col-sm-10">
+                     <button class="btn btn-primary" type="button" id="upload_btn" disabled>Upload</button>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -86,7 +133,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/resumablejs@1.1.0/resumable.min.js"></script>
   <script>
-    window.addEventListener("load", initialize); 
+    window.addEventListener('load', initialize); 
 
     var video = null;
     var uploader = null;
@@ -97,41 +144,71 @@
     }
 
     function load_video() {
-      $.getJSON( "/api/videos/{{ video.id }}", function(data) {
+      $.getJSON( '/api/videos/{{ video.id }}', function(data) {
         video = data;
 
         document.getElementById('title').value = video.title;
+        var progress = document.getElementById('encode_progress');
+        progress.innerHTML = "" + video.encoding_progress + "% " + "(" + video.encoding_speed + "x)";
+        progress.style.width = "" + video.encoding_progress + "%";
 
-        switch(video.status) {
-          case "file-waiting":
-          case "file-uploading":
-          case "wait-encoding":
-          case "encoding":
-            var progress = document.getElementById('encode_progress');
-            progress.innerHTML = "" + video.encoding_progress + "% " + "(" + video.encoding_speed + "x)";
-            progress.style.width = "" + video.encoding_progress + "%";
-          case "start-encoding":
-            document.getElementById('title_btn').disabled = true;
-            document.getElementById('title_btn').removeEventListener('click', save_title);
-            document.getElementById('encode_btn').style.display = "none";
-            document.getElementById('encode_btn').removeEventListener('click', encode);
-            document.getElementById('picker_btn').disabled = true;
-            break;
-          case "ready":
-            var progress = document.getElementById('encode_progress');
-            progress.innerHTML = "100%";
-            progress.style.width = "100%";
-          case "file-uploaded":
-            document.getElementById('title_btn').disabled = false;
-            document.getElementById('title_btn').addEventListener('click', save_title);
-            document.getElementById('encode_btn').style.display = "block";
-            document.getElementById('encode_btn').addEventListener('click', encode);
+        if (video.status == 'file-waiting') {
+            var progress = document.getElementById('upload_progress');
+            progress.innerHTML = "0%";
+            progress.style.width = "0%";
+        } else {
             var progress = document.getElementById('upload_progress');
             progress.innerHTML = "100%";
             progress.style.width = "100%";
-            progress = document.getElementById('encode_progress');
-            progress.innerHTML = "0%";
-            progress.style.width = "0%";
+        }
+
+        statusbox = document.getElementById('status');
+        statuscard = document.getElementById('status_card');
+        switch(video.status) {
+          case 'file-waiting':
+            statusbox.innerHTML = 'Waiting for file upload.';
+            statuscard.className = 'card bg-info';
+            break;
+          case 'file-uploading':
+            statusbox.innerHTML = 'File uploading.';
+            statuscard.className = 'card bg-info';
+            break;
+          case 'file-uploaded':
+            statusbox.innerHTML = 'File uploaded, waiting for encoding.';
+            statuscard.className = 'card bg-info';
+            break;
+          case 'start-encoding':
+            statusbox.innerHTML = 'Waiting in encoding queue.';
+            statuscard.className = 'card bg-primary';
+            break;
+          case 'encoding':
+            statusbox.innerHTML = 'Encoding...';
+            statuscard.className = 'card bg-primary';
+            break;
+          case 'ready':
+            statusbox.innerHTML = '<a class="btn btn-primary btn-lg active" href="/watch/' + video.id + '">Watch</a>';
+            statuscard.className = 'card bg-success';
+            break;
+          case 'error':
+            statusbox.innerHTML = 'Error: ' + video.status_message;
+            statuscard.className = 'card bg-danger';
+            break;
+        }
+
+        switch(video.status) {
+          case 'file-waiting':
+          case 'file-uploading':
+          case 'encoding':
+          case 'start-encoding':
+            document.getElementById('encode_btn').disabled = true;
+            document.getElementById('encode_btn').removeEventListener('click', encode);
+            document.getElementById('picker_btn').disabled = true;
+            break;
+          case 'ready':
+          case 'file-uploaded':
+          case 'error':
+            document.getElementById('encode_btn').disabled = false;
+            document.getElementById('encode_btn').addEventListener('click', encode);
             document.getElementById('picker_btn').disabled = false;
         }
 
@@ -142,14 +219,21 @@
     }
 
     function encode() {
+      title = document.getElementById('title').value;
+      tune = document.getElementById('tune').value;
+
       $.ajax({
         url: video.url, 
         type: 'POST',
-        data: JSON.stringify({'status': 'start-encoding'}),
+        data: JSON.stringify({
+          'title': title,
+          'tune': tune,
+          'status': 'start-encoding'
+        }),
         contentType: "application/json",
         success: function(video) {
           console.log(video);
-          document.getElementById('encode_btn').style.display = 'none';
+          document.getElementById('encode_btn').disabled = true;
         },
         error: function(error) {
           console.log(video);
@@ -164,27 +248,6 @@
       document.getElementById('alert').style.visibility = "hidden";
       document.getElementById('picker_btn').disabled = true;
       document.getElementById('upload_btn').disabled = true;
-    }
-
-    function save_title() {
-      title = document.getElementById('title').value;
-      if (! title) {
-        return;
-      }
-
-      $.ajax({
-        url: video.url, 
-        type: 'POST',
-        data: JSON.stringify({'title': title}),
-        contentType: "application/json",
-        success: function(video) {
-          document.getElementById('title').value = video.title;
-        },
-        error: function(error) {
-          console.log(video);
-          document.getElementById('alert').innerHTML = error.message;
-        }
-      });
     }
 
     function create_uploader(target) {
@@ -215,7 +278,9 @@
 
       uploader.on('complete', function() {
         if (success) {
-          document.getElementById('upload_btn').disabled = true;
+          if (document.getElementById('auto_start_encoding').value) {
+            encode();
+          }
         }
       });
 
