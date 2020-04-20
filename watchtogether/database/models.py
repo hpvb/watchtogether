@@ -30,8 +30,8 @@ class Subtitle(Base):
 class Video(WatchtogetherBase, Base):
     __tablename__ = 'video'
     
-    encoding_progress = Column(Integer)
-    encoding_speed = Column(Integer)
+    encoding_progress = Column(Integer, default=0)
+    encoding_speed = Column(Integer, default=0)
     status = Column(String(15), default='file-waiting')
     status_message = Column(Text)
 
