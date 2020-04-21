@@ -142,26 +142,29 @@
       load_video();
     }
 
+    function seconds_to_timestring(sec) {
+      var hours = new String(Math.floor(sec / 3600).toFixed());
+      sec %= 3600;
+      var minutes = new String(Math.floor(sec / 60)).padStart(2, '0');
+      var seconds = new String((sec % 60).toFixed()).padStart(2, '0');
+
+      return "" + hours + ":" + minutes + ":" + seconds;
+    }
+
     function load_video() {
       $.getJSON( '/api/videos/{{ video.id }}', function(data) {
         video = data;
 
         document.getElementById('title').value = video.title;
         var progress = document.getElementById('encode_progress');
-        progress.innerHTML = "" + video.encoding_progress + "% " + "(" + video.encoding_speed + "x)";
+        progress.innerHTML = "" + video.encoding_progress + "%";
         progress.style.width = "" + video.encoding_progress + "%";
-
   
         if (document.getElementById('file-name').value == "") {
           document.getElementById('file-name').value = video.orig_file_name;
         }
 
         document.getElementById('cancel_btn').disabled = true;
-
-        if (video.status == 'file-waiting') {
-        } else if (video.status == 'file-uploading') {
-        } else {
-        }
 
         statusbox = document.getElementById('status');
         statuscard = document.getElementById('status_card');
@@ -183,6 +186,8 @@
             statuscard.className = 'card bg-primary';
             break;
           case 'encoding':
+            var remaining = (video.duration * ((100 - video.encoding_progress) / 100)) / video.encoding_speed;
+            progress.innerHTML += " (" + video.encoding_speed + "x) " + seconds_to_timestring(remaining) + " remaining";
             statusbox.innerHTML = 'Encoding...';
             statuscard.className = 'card bg-primary';
             break;

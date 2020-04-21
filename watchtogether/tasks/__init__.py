@@ -112,9 +112,15 @@ def transcode_video(video):
     streaminfo = os.popen(cmd).read()
     streaminfo = json.loads(streaminfo)
 
-    for stream in streaminfo['streams']:
-        if stream['codec_type'] == 'video':
-            vcodec = stream['codec_name']
+    try:
+        for stream in streaminfo['streams']:
+            if stream['codec_type'] == 'video':
+                vcodec = stream['codec_name']
+    except:
+        video.status = 'error'
+        video.status_message = 'Unable to parse file, not a video file?'
+        db_session.commit()
+        return
 
     if vcodec == "":
         video.status = 'error'
@@ -227,6 +233,9 @@ def transcode_video(video):
         tmpfiles.append(filename)
 
     video.status = 'encoding'
+    video.width = vwidth
+    video.height = vheight
+    video.duration = duration
     db_session.commit()
 
     ffmpeg = multiprocessing.Process(target=run_ffmpeg, args=(transcode_command, f'{orig_file}.log'))
@@ -263,6 +272,7 @@ def transcode_video(video):
 
         if percentage < 100:
             video.status = 'error'
+            video.status_message = 'Encoder failed'
             db_session.commit()
 
     try:
@@ -276,6 +286,9 @@ def transcode_video(video):
     except Exception as e:
         print(output)
         print(e)
+        video.status = 'error'
+        video.status_message = 'MP4Box failed'
+        db_session.commit()
 
     for f in tmpfiles:
         os.unlink(f)
@@ -300,9 +313,6 @@ def transcode_video(video):
         print("Done uploading")
 
     video.playlist = f'{video.id}/playlist.mpd'
-    video.width = vwidth
-    video.height = vheight
-    video.duration = duration
     video.status = status
     db_session.commit()
 

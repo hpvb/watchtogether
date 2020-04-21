@@ -23,7 +23,7 @@ video_fields = {
     'width': fields.Integer,
     'height': fields.Integer,
     'duration': fields.Float,
-    'encoding_progress': fields.Integer,
+    'encoding_progress': fields.Float,
     'encoding_speed': fields.Float,
     'status': fields.String,
     'tune': fields.String,
@@ -90,7 +90,7 @@ class Video(Resource):
                     abort(409, 'Cannot upload new file while encoding')
 
             if status == 'start-encoding':
-                if video.status in ['file-uploaded', 'ready']:
+                if video.status in ['file-uploaded', 'ready', 'error']:
                     video.status = status
                     video.encoding_progress = 0
                     video.status_error =""
