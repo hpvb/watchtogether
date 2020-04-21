@@ -25,6 +25,12 @@ class Subtitle(Base):
     video_id = Column(String(10), ForeignKey('video.id'), nullable=False)
 
     language = Column(String(5), nullable=False, default='eng')
+    title = Column(Text)
+
+    internal = Column(Boolean, default=False)
+    internal_streamidx = Column(Integer)
+    internal_include = Column(Boolean, default=False)
+
     orig_file = Column(Text, nullable=False)    
 
 class Video(WatchtogetherBase, Base):
