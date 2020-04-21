@@ -171,7 +171,6 @@ def transcode_video(video):
         ]
 
     video_profiles = [
-        {'profile': 'main', 'preset': 'veryslow', 'crf': '22', 'maxrate': '600k', 'bufsize': '800k', 'width': 480},
         {'profile': 'main', 'preset': 'slow', 'crf': '22', 'maxrate': '900k', 'bufsize': '1200k', 'width': 640},
         {'profile': 'high', 'preset': 'slow', 'crf': '22', 'maxrate': '1200k', 'bufsize': '1500k', 'width': 960},
         {'profile': 'high', 'preset': 'slow', 'crf': '21', 'maxrate': '2000k', 'bufsize': '4000k', 'width': 1280},
@@ -180,7 +179,7 @@ def transcode_video(video):
 
     video_formats = [
         {'profile': 'baseline', 'preset': 'veryslow', 'crf': '22', 'maxrate': '200k', 'bufsize': '300k', 'width': 320},
-        {'profile': 'baseline', 'preset': 'veryslow', 'crf': '22', 'maxrate': '400k', 'bufsize': '500k', 'width': 320}
+        {'profile': 'baseline', 'preset': 'veryslow', 'crf': '22', 'maxrate': '400k', 'bufsize': '500k', 'width': 480}
     ]
 
     sizes = [1, 1.5, 2, 3]
