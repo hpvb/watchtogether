@@ -279,7 +279,7 @@
     function create_uploader(target) {
       uploader = new Resumable({
         target: target,
-        simultaneousUploads: 1,
+        simultaneousUploads: 3,
         prioritizeFirstAndLastChunk: true,
         chunkSize: 5 * 1024 * 1024,
         maxFiles: 1
