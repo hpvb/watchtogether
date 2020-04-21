@@ -35,7 +35,7 @@
 
         <div class="mb-3 mt-3">
           <div class="card" id="status_card">
-            <div class="card-header">
+            <div class="card-header" id="status_card_header">
               Video Status
             </div>
             <div class="card-body">
@@ -168,36 +168,43 @@
 
         statusbox = document.getElementById('status');
         statuscard = document.getElementById('status_card');
+        statuscardheader = document.getElementById('status_card_header');
         switch(video.status) {
           case 'file-waiting':
-            statusbox.innerHTML = 'Waiting for file upload.';
-            statuscard.className = 'card bg-info';
+            statusbox.innerHTML = 'Waiting for file upload. Select a file in the Video file section.';
+            statuscard.className = 'card border-info';
+            statuscardheader.className = 'card-header bg-info';
             break;
           case 'file-uploading':
-            statusbox.innerHTML = 'File uploading.';
-            statuscard.className = 'card bg-info';
+            statusbox.innerHTML = 'File uploading. Please wait for it to complete. If you\'re not currently uploading hit cancel to try again.';
+            statuscard.className = 'card border-info';
+            statuscardheader.className = 'card-header bg-info';
             break;
           case 'file-uploaded':
-            statusbox.innerHTML = 'File uploaded, waiting for encoding.';
-            statuscard.className = 'card bg-info';
+            statusbox.innerHTML = 'File uploaded, waiting for encoding. If you\'re done making modifications press the Encode button..';
+            statuscard.className = 'card border-info';
+            statuscardheader.className = 'card-header bg-info';
             break;
           case 'start-encoding':
-            statusbox.innerHTML = 'Waiting in encoding queue.';
-            statuscard.className = 'card bg-primary';
+            statusbox.innerHTML = 'Waiting in encoding queue. Encoding will start shortly';
+            statuscard.className = 'card border-primary';
+            statuscardheader.className = 'card-header bg-primary';
             break;
           case 'encoding':
             var remaining = (video.duration * ((100 - video.encoding_progress) / 100)) / video.encoding_speed;
-            progress.innerHTML += " (" + video.encoding_speed + "x) " + seconds_to_timestring(remaining) + " remaining";
-            statusbox.innerHTML = 'Encoding...';
-            statuscard.className = 'card bg-primary';
+            statusbox.innerHTML = 'Encoding (' + video.encoding_speed + 'x) ' + seconds_to_timestring(remaining) + ' remaining';
+            statuscard.className = 'card border-primary';
+            statuscardheader.className = 'card-header bg-primary';
             break;
           case 'ready':
-            statusbox.innerHTML = '<a class="btn btn-primary btn-lg active" href="/watch/' + video.id + '">Watch</a>';
-            statuscard.className = 'card bg-success';
+            statusbox.innerHTML = 'Ready! Watch it at <a href="{{ url_for('main.watch', video_id=video.id) }}">{{ url_for('main.watch', video_id=video.id, _external=True) }}</a>';
+            statuscard.className = 'card border-success';
+            statuscardheader.className = 'card-header bg-success';
             break;
           case 'error':
             statusbox.innerHTML = 'Error: ' + video.status_message;
-            statuscard.className = 'card bg-danger';
+            statuscard.className = 'card border-danger';
+            statuscardheader.className = 'card-header bg-danger';
             break;
         }
 
