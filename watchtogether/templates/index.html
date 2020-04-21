@@ -113,7 +113,7 @@ function load_videos() {
           status = 'Waiting in encoding queue.';
           break;
         case 'encoding':
-          status  = '<span class="spinner-border spinner-border-sm" role="status"></span>&nbsp;Encoding... (' + video.encoding_progress + '%)';
+          status  = '<span class="spinner-border spinner-border-sm" role="status"></span>&nbsp;Encoding... (' + video.encoding_progress.toFixed(2) + '%)';
           break;
         case 'ready':
           status = 'Ready!'

@@ -157,7 +157,7 @@
 
         document.getElementById('title').value = video.title;
         var progress = document.getElementById('encode_progress');
-        progress.innerHTML = "" + video.encoding_progress + "%";
+        progress.innerHTML = "" + video.encoding_progress.toFixed(2) + "%";
         progress.style.width = "" + video.encoding_progress + "%";
   
         if (document.getElementById('file-name').value == "") {
