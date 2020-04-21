@@ -70,7 +70,7 @@ class VideoFile(Resource):
             db_session.commit()
 
         if video.status == 'file-waiting' and resumableChunkNumber != 1:
-            if video.upload_identfier == resumableIdentifier:
+            if video.upload_identifier == resumableIdentifier:
                 video.status = 'file-uploading'
                 db_session.commit()
             else:
