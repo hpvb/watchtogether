@@ -115,6 +115,6 @@ class VideoFile(Resource):
             print(f'Saved file as: {target_file_name}')
             video.status = 'file-uploaded'
             video.encoding_progress = 0
-            video.orig_file = target_file_name
+            video.orig_file = target_file_name.split("/")[-1]
             video.orig_file_name = resumableFilename
             db_session.commit()

@@ -106,7 +106,7 @@ def transcode_video(video):
     audio_streamidx = -1
     has_audio = False
 
-    orig_file = video.orig_file
+    orig_file = os.path.join(celery.conf.get('MOVIE_PATH'), video.orig_file)
 
     cmd = f'ffprobe -v quiet -show_streams -show_format -print_format json {orig_file}'
     streaminfo = os.popen(cmd).read()
