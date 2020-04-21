@@ -24,9 +24,13 @@
   </div>
 
   <div class="content">
-    <input type="text" class="form-control mb-2 mr-sm-2" id="video-title" placeholder="My awesome movie">
-    <button type="submit" class="btn btn-primary mb-2" id="create-button">Create</button>
     <h2> My videos </h2>
+    <div class="input-group">
+      <input type="text" class="form-control" id="video-title" placeholder="My awesome movie">
+      <div class="input-group-append">
+        <button class="btn btn-primary" type="button" id="create_btn">Create</button>
+      </div>
+    </div>
     <table class="table" id="videos">
       <thead>
         <tr>
@@ -50,7 +54,7 @@ window.addEventListener("load", initialize);
 
 function initialize() {
   window.setInterval(load_videos, 10000);
-  document.getElementById("create-button").addEventListener("click", create_video);
+  document.getElementById("create_btn").addEventListener("click", create_video);
   load_videos();
 }
 
@@ -90,26 +94,45 @@ function load_videos() {
     var table_contents = '';
     data.forEach(function(video, i) { 
       var video_state = 'disabled';
-      var table_class = 'error';
+      var table_class = 'info';
       var spinner = '';
       var del = 'onclick="delete_video(\'' + video.url  + '\', \'' + video.id + '\');"';
 
-      if (video.status == 'ready') {
-        video_state = '';
-        table_class = 'success';
-      } else if (video.status == 'encoding') {
-        table_class = 'info';
-        spinner = '<span class="spinner-border spinner-border-sm" role="status"></span>';
-        del = '';
+      var status = "";
+      switch(video.status) {
+        case 'file-waiting':
+          status = 'Waiting for file upload.';
+          break;
+        case 'file-uploading':
+          status = 'File uploading.';
+          break;
+        case 'file-uploaded':
+          status = 'File uploaded, waiting for encoding.';
+          break;
+        case 'start-encoding':
+          status = 'Waiting in encoding queue.';
+          break;
+        case 'encoding':
+          status  = '<span class="spinner-border spinner-border-sm" role="status"></span>&nbsp;Encoding... (' + video.encoding_progress + '%)';
+          break;
+        case 'ready':
+          status = 'Ready!'
+          table_class = 'success';
+          video_state = '';
+          break;
+        case 'error':
+          table_class = 'error';
+          status = 'Error: ' + video.status_message;
+          break;
       }
 
       table_contents += 
         '<tr id="' + video['id'] + '" class="table-' + table_class + '">' + 
           '<td>' + video['title'] + '</td>' +
-          '<td>' + spinner + '&nbsp;' + video.status + '</td>' +
-          '<td><a href="/videos/' + video.id + '" class="btn btn-primary btn-sm" role="button">Edit</a></td>' +
+          '<td>' + status + '</td>' +
+          '<td><a href="/videos/' + video.id + '" class="btn btn-primary btn-sm" role="button">Status Page</a></td>' +
           '<td><a href="/watch/' + video['id'] + '" class="btn btn-primary btn-sm ' + video_state  + '" role="button">Watch</a></td>' +
-          '<td><button ' + del + ' id="delete_btn" class="btn btn-danger btn-sm ' + video_state  + '">Delete</button></td>' +
+          '<td><button onclick="delete_video(\'' + video.url  + '\', \'' + video.id + '\')" id="delete_btn" class="btn btn-danger btn-sm">Delete</button></td>' +
         '</tr>';
     });
     $('#videos tbody').html(table_contents);
