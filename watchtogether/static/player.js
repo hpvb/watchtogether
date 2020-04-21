@@ -6,7 +6,6 @@ class VideoPlayer {
     this.video = video;
     this.playing = false;
     this.interacted = false;
-    this.tickled = false;
     this.max_ease = 0.2;
     this.max_ease_time = 7;
     this.ready = false;
@@ -261,11 +260,11 @@ class VideoPlayer {
       play_promise.then(function() {
         this.video.pause();
         this.video.currentTime = current_time;
-        this.tickled = true;
+        this.interacted = true;
       }.bind(this)).catch(function(error) {
       });
     } else {
-      this.tickled = true;
+      this.interacted = true;
       this.video.pause();
       this.video.currentTime = current_time;
     }
