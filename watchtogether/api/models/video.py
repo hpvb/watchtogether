@@ -1,7 +1,7 @@
 import shutil
 import os
 
-from flask import request, redirect, session, abort
+from flask import request, redirect, session, abort, url_for
 from flask import current_app as app
 from flask_restful import Resource, marshal_with, reqparse, fields, marshal
 
@@ -15,9 +15,22 @@ from watchtogether import tasks
 from . import ValidValueParser
 from.video_file import VideoFile, VideoFileUrl
 
+class VideoWatchUrl(fields.Raw):
+    def output(self, key, obj):
+        return url_for('main.watch', video_id=obj.id, _external=True)
+
+def VideoTuneParser(value):
+    valid = ['film', 'animation', 'grain']
+    return ValidValueParser('Tune', value, valid)
+
+def VideoStateParser(value):
+    valid = ['file-waiting', 'start-encoding']
+    return ValidValueParser('State', value, valid)
+
 video_fields = {
     'url': fields.Url('video', absolute=True),
-    'file_url': VideoFileUrl(),
+    'file_url': VideoFileUrl,
+    'watch_url': VideoWatchUrl,
     'id': fields.String,
     'title': fields.String,
     'width': fields.Integer,
@@ -30,14 +43,6 @@ video_fields = {
     'default_subtitles': fields.Boolean,
     'orig_file_name': fields.String
 }
-
-def VideoTuneParser(value):
-    valid = ['film', 'animation', 'grain']
-    return ValidValueParser('Tune', value, valid)
-
-def VideoStateParser(value):
-    valid = ['file-waiting', 'start-encoding']
-    return ValidValueParser('State', value, valid)
 
 new_video_parser = reqparse.RequestParser()
 new_video_parser.add_argument('title', nullable=False, required=True)

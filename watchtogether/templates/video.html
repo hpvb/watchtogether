@@ -201,7 +201,7 @@
             statuscardheader.className = 'card-header bg-primary';
             break;
           case 'ready':
-            statusbox.innerHTML = 'Ready! Watch it at <a href="{{ url_for('main.watch', video_id=video.id) }}">{{ url_for('main.watch', video_id=video.id, _external=True) }}</a>';
+            statusbox.innerHTML = 'Ready! Watch it at <a href="' + video.watch_url + '">' + video.watch_url + '</a>';
             statuscard.className = 'card border-success';
             statuscardheader.className = 'card-header bg-success';
             break;

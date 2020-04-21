@@ -134,7 +134,7 @@ function load_videos() {
           '<td>' + video['title'] + '</td>' +
           '<td>' + status + '</td>' +
           '<td><a href="/videos/' + video.id + '" class="btn btn-primary btn-sm" role="button">Status Page</a></td>' +
-          '<td><a href="/watch/' + video['id'] + '" class="btn btn-primary btn-sm ' + video_state  + '" role="button">Watch</a></td>' +
+          '<td><a href="' + video.watch_url + '" class="btn btn-primary btn-sm ' + video_state  + '" role="button">Watch</a></td>' +
           '<td><button onclick="delete_video(\'' + video.url  + '\', \'' + video.id + '\')" id="delete_btn" class="btn btn-danger btn-sm">Delete</button></td>' +
         '</tr>';
     });
