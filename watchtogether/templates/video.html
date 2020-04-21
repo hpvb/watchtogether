@@ -155,13 +155,17 @@
       $.getJSON( '/api/videos/{{ video.id }}', function(data) {
         video = data;
 
-        document.getElementById('title').value = video.title;
         var progress = document.getElementById('encode_progress');
         progress.innerHTML = "" + video.encoding_progress.toFixed(2) + "%";
         progress.style.width = "" + video.encoding_progress + "%";
   
         if (document.getElementById('file-name').value == "") {
           document.getElementById('file-name').value = video.orig_file_name;
+        }
+
+        var title_element = document.getElementById('title');
+        if (title_element.value == "" && title_element != document.activeElement) {
+          document.getElementById('title').value = video.title;
         }
 
         document.getElementById('cancel_btn').disabled = true;
@@ -217,6 +221,7 @@
             var progress = document.getElementById('upload_progress');
             progress.innerHTML = "100%";
             progress.style.width = "100%";
+          break;
         }
 
         switch(video.status) {
