@@ -209,6 +209,17 @@
         }
 
         switch(video.status) {
+          case 'encoding':
+          case 'start-encoding':
+          case 'ready':
+          case 'file-uploaded':
+          case 'error':
+            var progress = document.getElementById('upload_progress');
+            progress.innerHTML = "100%";
+            progress.style.width = "100%";
+        }
+
+        switch(video.status) {
           case 'file-waiting':
             document.getElementById('picker_btn').disabled = false;
             document.getElementById('encode_btn').disabled = true;
@@ -222,9 +233,6 @@
             break;
           case 'ready':
           case 'file-uploaded':
-            var progress = document.getElementById('upload_progress');
-            progress.innerHTML = "100%";
-            progress.style.width = "100%";
           case 'error':
             document.getElementById('encode_btn').disabled = false;
             document.getElementById('picker_btn').disabled = false;
