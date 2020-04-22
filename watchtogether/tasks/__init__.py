@@ -216,7 +216,7 @@ def transcode_video(video):
     for num, f in enumerate(video_formats):
         stream = num
         filename = f'{outdir}/video_{f["width"]}_{f["maxrate"]}.mp4'
-        transcode_command.extend(['-map', f'0:{video_streamidx}', f'-c:v', 'libx264', '-x264-params', f'no-scenecut', f'-profile:v', f['profile'], '-preset:v', f["preset"], '-tune:v', video.tune,
+        transcode_command.extend(['-map', f'0:{video_streamidx}', '-an', '-sn', '-dn', f'-c:v', 'libx264', '-x264-params', f'no-scenecut', f'-profile:v', f['profile'], '-preset:v', f["preset"], '-tune:v', video.tune,
             '-keyint_min', f'{keyint}', '-g', f'{keyint}', '-sc_threshold', '0', '-bf', '1', '-b_strategy', '0',
             f'-crf', f['crf'], f'-maxrate', f'{f["maxrate"]}', f'-bufsize', f'{f["bufsize"]}', f'-filter', f'scale={f["width"]}:-2',
             '-map_chapters', '-1', filename])
@@ -226,7 +226,7 @@ def transcode_video(video):
     for num, f in enumerate(audio_formats):
         stream = num 
         filename = f'{outdir}/audio_{f["rate"]}.mp4'
-        transcode_command.extend(['-map', f'0:{audio_streamidx}', f'-c:a', 'aac', f'-b:a', f['rate'], f'-ac', f['channels'], '-map_chapters', '-1', filename])
+        transcode_command.extend(['-map', f'0:{audio_streamidx}', '-vn', '-sn', '-dn', f'-c:a', 'aac', f'-b:a', f['rate'], f'-ac', f['channels'], '-map_chapters', '-1', filename])
         dash_command.append(filename)
         tmpfiles.append(filename)
 
