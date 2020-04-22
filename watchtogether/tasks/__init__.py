@@ -74,17 +74,17 @@ def run_ffmpeg(command, logfile):
     with open(logfile, 'w') as lf:
         output = subprocess.run(command, stderr=lf)
 
-@celery.task
-def transcode(video_id):
+@celery.task(bind=True)
+def transcode(self, video_id):
     video = db_session.query(models.Video).filter_by(id=video_id).one_or_none()
     try:
-        transcode_video(video)
+        transcode_video(video, self)
     except Exception as e:
         video.status = 'error'
         db_session.commit()
         raise e
     
-def transcode_video(video):
+def transcode_video(video, task):
     status = 'error'
     output = ""
 
@@ -137,7 +137,7 @@ def transcode_video(video):
             video_streamidx = stream['index']
         if stream['codec_type'] == 'audio':
             has_audio = True
-            if audio_streamidx == -1 and stream['tags']['language'] == 'und':
+            if audio_streamidx == -1 and stream['tags']['language'] != 'eng':
                 audio_streamidx = stream['index']
                 audio_codec = stream['codec_name']
             if stream['tags']['language'] == 'eng':
@@ -283,7 +283,7 @@ def transcode_video(video):
             video.status_message = status
             db_session.commit()
 
-            self.update_state(
+            task.update_state(
                 state = states.FAILURE,
                 meta = status
             )
