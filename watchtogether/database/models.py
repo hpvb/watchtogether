@@ -65,5 +65,7 @@ class Video(WatchtogetherBase, Base):
     orig_file_name = Column(Text)
     playlist = Column(Text)
 
+    celery_taskid = Column(Text)
+
     subtitles = relationship('Subtitle', backref='Video', lazy=True)
     encoded_files = relationship('EncodedFile', backref='Video', lazy=True)

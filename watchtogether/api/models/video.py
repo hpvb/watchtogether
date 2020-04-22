@@ -100,7 +100,7 @@ class Video(Resource):
                     video.status = status
                     video.encoding_progress = 0
                     video.status_error =""
-                    tasks.transcode.delay(video.id)
+                    video.celery_taskid = tasks.transcode.delay(video.id)
                 else:
                     abort(409, 'Cannot start encoding while video is in this state')
 

@@ -14,7 +14,8 @@ import boto3
 import boto3.session
 from botocore.exceptions import NoCredentialsError
 
-from celery import Celery
+from celery import Celery, states
+from celery.exceptions import Ignore
 import billiard as multiprocessing
 
 from watchtogether.database import models, db_session, init_engine
@@ -218,15 +219,14 @@ def transcode_video(video):
         transcode_command.extend(['-map', f'0:{video_streamidx}', f'-c:v', 'libx264', '-x264-params', f'no-scenecut', f'-profile:v', f['profile'], '-preset:v', f["preset"], '-tune:v', video.tune,
             '-keyint_min', f'{keyint}', '-g', f'{keyint}', '-sc_threshold', '0', '-bf', '1', '-b_strategy', '0',
             f'-crf', f['crf'], f'-maxrate', f'{f["maxrate"]}', f'-bufsize', f'{f["bufsize"]}', f'-filter', f'scale={f["width"]}:-2',
-            '-map_chapters', '-1', '-metadata', f'title={video.title}', '-metadata', f'comment={video.title}', filename])
+            '-map_chapters', '-1', filename])
         dash_command.append(filename)
         tmpfiles.append(filename)
 
     for num, f in enumerate(audio_formats):
         stream = num 
         filename = f'{outdir}/audio_{f["rate"]}.mp4'
-        transcode_command.extend(['-map', f'0:{audio_streamidx}', f'-c:a', 'aac', f'-b:a', f['rate'], f'-ac', f['channels'], '-map_chapters', '-1',
-            '-metadata', f'title={video.title}', '-metadata', f'comment={video.title}', filename])
+        transcode_command.extend(['-map', f'0:{audio_streamidx}', f'-c:a', 'aac', f'-b:a', f['rate'], f'-ac', f['channels'], '-map_chapters', '-1', filename])
         dash_command.append(filename)
         tmpfiles.append(filename)
 
@@ -240,6 +240,7 @@ def transcode_video(video):
     ffmpeg.start()
     percentage = 0
     speed = 0
+    ffmpeg_clean_end = False
 
     try:
         connection, client_address = sock.accept()
@@ -254,6 +255,9 @@ def transcode_video(video):
                         percentage = min(percentage, 100)
                     if line.startswith('speed'):
                         speed = float(line.split('=')[1].strip().split('x')[0])
+                    if line.startswith('progress'):
+                        if line.split('=')[1].strip() == 'end':
+                            ffmpeg_clean_end = True
 
                 video.encoding_progress = percentage
                 video.encoding_speed = speed
@@ -269,10 +273,22 @@ def transcode_video(video):
         shutil.rmtree(tmpdir, ignore_errors = True)
 
         if percentage < 100:
+            status = ""
+            if ffmpeg_clean_end:
+                status = "Encoding failed"
+            else:
+                status = "Encoder crash"
+                
             video.status = 'error'
-            video.status_message = 'Encoder failed'
+            video.status_message = status
             db_session.commit()
 
+            self.update_state(
+                state = states.FAILURE,
+                meta = status
+            )
+
+            raise Ignore()
     try:
         print("Reencoded file")
         print(f'Executing: {" ".join(dash_command)}')
