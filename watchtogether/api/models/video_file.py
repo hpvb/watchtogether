@@ -21,6 +21,7 @@ def get_chunk_name(uploaded_filename, chunk_number):
     return uploaded_filename + '_part_%03d' % chunk_number
 
 def is_hole(fh, offset):
+    print(f"Checking offset: {offset}")
     return os.lseek(fh, offset, os.SEEK_HOLE) == offset
 
 def target_name(video_id):
@@ -126,8 +127,9 @@ class VideoFile(Resource):
             print(f'Saved chunk: {offset}: {resumableChunkNumber}')
 
             last_chunk_offset = resumableTotalChunks * resumableChunkSize
-            if (not is_hole(fh, resumableChunkSize - 1) and resumableChunkNumber == resumableTotalChunks) or (not is_hole(fh, resumableTotalSize - 1) and resumableChunkNumber == 1):
-                update_video_metadata(video, target_file_name)
+            if resumableTotalSize >= resumableChunkSize:
+                if (not is_hole(fh, resumableChunkSize - 1) and resumableChunkNumber == resumableTotalChunks) or (not is_hole(fh, resumableTotalSize - 1) and resumableChunkNumber == 1):
+                    update_video_metadata(video, target_file_name)
 
         if upload_complete:
             if not is_video_file(target_file_name):
@@ -140,4 +142,7 @@ class VideoFile(Resource):
 
             video.status = 'file-uploaded'
             video.encoding_progress = 0
+            for encoded_file in video.encoded_files:
+                rm_f(os.path.join(app.config['MOVIE_PATH'], video.id, encoded_file.encoded_file_name))
+                db_session.delete(encoded_file)
             db_session.commit()

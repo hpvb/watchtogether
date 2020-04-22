@@ -42,6 +42,7 @@ class EncodedFile(Base):
     
     language = Column(String(5), nullable=False, default='eng')
     track_type = Column(String(10), nullable=False)
+    encoding_hash = Column(String(64), nullable=False)
     encoded_file_name = Column(Text, nullable=False)
 
 class Video(WatchtogetherBase, Base):

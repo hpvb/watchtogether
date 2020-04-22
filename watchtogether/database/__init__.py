@@ -15,7 +15,7 @@ db = SQLAlchemy()
 
 def init_engine(uri):
     global engine
-    engine = create_engine(uri, encoding='utf-8', pool_pre_ping=True)
+    engine = create_engine(uri, encoding='utf-8', convert_unicode=True, pool_pre_ping=True)
     return engine
 
 def init_db():
