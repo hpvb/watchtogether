@@ -19,7 +19,7 @@ import billiard as multiprocessing
 
 from watchtogether.database import models, db_session, init_engine
 from watchtogether.config import settings
-from watchtogether.util import rm_f
+from watchtogether.util import rm_f, ffprobe
 
 celery = Celery(__name__, broker=settings.CELERY_BROKER_URL)
 celery.conf.update(settings.as_dict())
@@ -108,9 +108,7 @@ def transcode_video(video):
 
     orig_file = os.path.join(celery.conf.get('MOVIE_PATH'), video.orig_file)
 
-    cmd = f'ffprobe -v quiet -show_streams -show_format -print_format json {orig_file}'
-    streaminfo = os.popen(cmd).read()
-    streaminfo = json.loads(streaminfo)
+    streaminfo = ffprobe(orig_file)
 
     try:
         for stream in streaminfo['streams']:
@@ -220,14 +218,15 @@ def transcode_video(video):
         transcode_command.extend(['-map', f'0:{video_streamidx}', f'-c:v', 'libx264', '-x264-params', f'no-scenecut', f'-profile:v', f['profile'], '-preset:v', f["preset"], '-tune:v', video.tune,
             '-keyint_min', f'{keyint}', '-g', f'{keyint}', '-sc_threshold', '0', '-bf', '1', '-b_strategy', '0',
             f'-crf', f['crf'], f'-maxrate', f'{f["maxrate"]}', f'-bufsize', f'{f["bufsize"]}', f'-filter', f'scale={f["width"]}:-2',
-            '-map_chapters', '-1', filename])
+            '-map_chapters', '-1', '-metadata', f'title={video.title}', '-metadata', f'comment={video.title}', filename])
         dash_command.append(filename)
         tmpfiles.append(filename)
 
     for num, f in enumerate(audio_formats):
         stream = num 
         filename = f'{outdir}/audio_{f["rate"]}.mp4'
-        transcode_command.extend(['-map', f'0:{audio_streamidx}', f'-c:a', 'aac', f'-b:a', f['rate'], f'-ac', f['channels'], '-map_chapters', '-1', filename])
+        transcode_command.extend(['-map', f'0:{audio_streamidx}', f'-c:a', 'aac', f'-b:a', f['rate'], f'-ac', f['channels'], '-map_chapters', '-1',
+            '-metadata', f'title={video.title}', '-metadata', f'comment={video.title}', filename])
         dash_command.append(filename)
         tmpfiles.append(filename)
 

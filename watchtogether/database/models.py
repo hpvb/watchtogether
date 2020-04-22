@@ -32,6 +32,17 @@ class Subtitle(Base):
     internal_include = Column(Boolean, default=False)
 
     orig_file = Column(Text, nullable=False)    
+    encoded_file_name = Column(Text, nullable=False)
+
+class EncodedFile(Base):
+    __tablename__ = 'encoded_file'
+
+    id = Column(Integer, primary_key=True)
+    video_id = Column(String(10), ForeignKey('video.id'), nullable=False)
+    
+    language = Column(String(5), nullable=False, default='eng')
+    track_type = Column(String(10), nullable=False)
+    encoded_file_name = Column(Text, nullable=False)
 
 class Video(WatchtogetherBase, Base):
     __tablename__ = 'video'
@@ -53,4 +64,6 @@ class Video(WatchtogetherBase, Base):
     orig_file = Column(Text)
     orig_file_name = Column(Text)
     playlist = Column(Text)
+
     subtitles = relationship('Subtitle', backref='Video', lazy=True)
+    encoded_files = relationship('EncodedFile', backref='Video', lazy=True)

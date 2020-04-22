@@ -132,6 +132,7 @@
 
     var video = null;
     var uploader = null;
+    var prev_title = null;
 
     function initialize() {
       document.getElementById('cancel_btn').addEventListener("click", cancel);
@@ -163,9 +164,9 @@
           document.getElementById('file-name').value = video.orig_file_name;
         }
 
-        var title_element = document.getElementById('title');
-        if (title_element.value == "" && title_element != document.activeElement) {
+        if (video.title != prev_title) {
           document.getElementById('title').value = video.title;
+          prev_title = video.title;
         }
 
         document.getElementById('cancel_btn').disabled = true;
@@ -331,6 +332,10 @@
             encode();
           }
         }
+      });
+
+      uploader.on('fileError', function(file, message) {
+        console.log(message);
       });
 
       uploader.on('error', function(message, file) {

@@ -39,6 +39,7 @@ video_fields = {
     'encoding_progress': fields.Float,
     'encoding_speed': fields.Float,
     'status': fields.String,
+    'status_message': fields.String,
     'tune': fields.String,
     'default_subtitles': fields.Boolean,
     'orig_file_name': fields.String
