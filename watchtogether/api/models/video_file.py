@@ -15,13 +15,12 @@ from watchtogether import tasks
 
 class VideoFileUrl(fields.Raw):
     def output(self, key, obj):
-        return flask_api.url_for(VideoFile, id=obj.id, _external=True)
+        return flask_api.url_for(VideoFile, video_id=obj.id, _external=True)
 
 def get_chunk_name(uploaded_filename, chunk_number):
     return uploaded_filename + '_part_%03d' % chunk_number
 
 def is_hole(fh, offset):
-    print(f"Checking offset: {offset}")
     return os.lseek(fh, offset, os.SEEK_HOLE) == offset
 
 def target_name(video_id):
@@ -34,9 +33,9 @@ def update_video_metadata(video, filename):
     db_session.commit()
 
 class VideoFile(Resource):
-    def get(self, id):
+    def get(self, video_id):
         owner_id = request.cookies.get(app.config['COOKIE_OWNER_ID'])
-        video = db_session.query(models.Video).filter_by(owner=owner_id, id=id).one_or_none()
+        video = db_session.query(models.Video).filter_by(owner=owner_id, id=video_id).one_or_none()
 
         if not video:
             return {'message': 'Video not found'}, 403
@@ -63,16 +62,15 @@ class VideoFile(Resource):
 
         with open(target_file_name, "rb") as target_file:
             offset = (resumableChunkNumber - 1) * resumableChunkSize
-            print(f'checking chunk: {offset}: {resumableChunkNumber}')
             fh = target_file.fileno()
             if not is_hole(fh, offset):
                 return 'OK'
 
         return {'message': 'Chunk not found'}, 404
 
-    def post(self, id):
+    def post(self, video_id):
         owner_id = request.cookies.get(app.config['COOKIE_OWNER_ID'])
-        video = db_session.query(models.Video).filter_by(owner=owner_id, id=id).one_or_none()
+        video = db_session.query(models.Video).filter_by(owner=owner_id, id=video_id).one_or_none()
 
         if not video:
             return {'message': 'Video not found'}, 403
@@ -124,7 +122,6 @@ class VideoFile(Resource):
                 upload_complete = True
 
             os.fsync(fh)
-            print(f'Saved chunk: {offset}: {resumableChunkNumber}')
 
             last_chunk_offset = resumableTotalChunks * resumableChunkSize
             if resumableTotalSize >= resumableChunkSize:

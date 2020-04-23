@@ -11,8 +11,9 @@ def ValidValueParser(name, value, valid):
 
 from .video import *
 from .video_file import *
+from .subtitle import *
 
 __all__ = [
-    'VideoList', 'Video', 'VideoFile'
+    'VideoList', 'Video', 'VideoFile', 'Subtitle', 'SubtitleList', 'SubtitleFile'
 ]
 

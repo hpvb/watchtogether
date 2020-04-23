@@ -31,8 +31,7 @@ class Subtitle(Base):
     internal_streamidx = Column(Integer)
     internal_include = Column(Boolean, default=False)
 
-    orig_file = Column(Text, nullable=False)    
-    encoded_file_name = Column(Text, nullable=False)
+    orig_file = Column(Text)    
 
 class EncodedFile(Base):
     __tablename__ = 'encoded_file'

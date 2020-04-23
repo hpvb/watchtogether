@@ -14,10 +14,19 @@ from watchtogether import tasks
 
 from . import ValidValueParser
 from.video_file import VideoFile, VideoFileUrl
+from.subtitle import SubtitleList, subtitle_fields
+
+class SubtitlesListUrl(fields.Raw):
+    def output(self, key, obj):
+        return flask_api.url_for(SubtitleList, video_id=obj.id, _external=True)
 
 class VideoWatchUrl(fields.Raw):
     def output(self, key, obj):
         return url_for('main.watch', video_id=obj.id, _external=True)
+
+class VideoUrl(fields.Raw):
+    def output(self, key, obj):
+        return flask_api.url_for(Video, video_id=obj.id, _external=True)
 
 def VideoTuneParser(value):
     valid = ['film', 'animation', 'grain']
@@ -28,9 +37,10 @@ def VideoStateParser(value):
     return ValidValueParser('State', value, valid)
 
 video_fields = {
-    'url': fields.Url('video', absolute=True),
+    'url': VideoUrl,
     'file_url': VideoFileUrl,
     'watch_url': VideoWatchUrl,
+    'subtitles_url': SubtitlesListUrl,
     'id': fields.String,
     'title': fields.String,
     'width': fields.Integer,
@@ -42,7 +52,7 @@ video_fields = {
     'status_message': fields.String,
     'tune': fields.String,
     'default_subtitles': fields.Boolean,
-    'orig_file_name': fields.String
+    'orig_file_name': fields.String,
 }
 
 new_video_parser = reqparse.RequestParser()
@@ -55,9 +65,9 @@ video_parser.add_argument('status', type=VideoStateParser, nullable=False, requi
 
 class Video(Resource):
     @marshal_with(video_fields)
-    def get(self, id):
+    def get(self, video_id):
         owner_id = request.cookies.get(app.config['COOKIE_OWNER_ID'])
-        video = db_session.query(models.Video).filter_by(owner=owner_id, id=id).one_or_none()
+        video = db_session.query(models.Video).filter_by(owner=owner_id, id=video_id).one_or_none()
 
         if not video:
             abort(404, 'Video not found')
@@ -65,11 +75,11 @@ class Video(Resource):
         return video
 
     @marshal_with(video_fields)
-    def post(self, id):
+    def post(self, video_id):
         args = video_parser.parse_args()
 
         owner_id = request.cookies.get(app.config['COOKIE_OWNER_ID'])
-        video = db_session.query(models.Video).filter_by(owner=owner_id, id=id).one_or_none()
+        video = db_session.query(models.Video).filter_by(owner=owner_id, id=video_id).one_or_none()
 
         if not video:
             abort(404, 'Video not found')
@@ -108,9 +118,9 @@ class Video(Resource):
 
         return video
 
-    def delete(self, id):
+    def delete(self, video_id):
         owner_id = request.cookies.get(app.config['COOKIE_OWNER_ID'])
-        video = db_session.query(models.Video).filter_by(owner=owner_id, id=id).one_or_none()
+        video = db_session.query(models.Video).filter_by(owner=owner_id, id=video_id).one_or_none()
 
         if not video:
             abort(404, 'Video not found')

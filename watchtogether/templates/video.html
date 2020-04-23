@@ -119,9 +119,42 @@
             </div>
           </div>
 
-        </div>
-        <div id="alert" class="alert alert-danger" role="alert" style="visibility: hidden;"></div>
+          <div class="card">
+            <div class="card-header">
+              Subtitles
+            </div>
+            <div class="card-body">
+              <div>
+                <div class="form-group row">
+                  <label for="subtitle_title" class="col-sm-2 col-form-label">Subtitle title</label>
+                  <div class="col-sm-10">
+                    <input type="text" class="form-control" id="subtitle_title" placeholder="Captions">
+                  </div>
+                </div>
+                <div class="form-group row">
+                  <label for="subtitle_language" class="col-sm-2 col-form-label">Subtitle language</label>
+                  <div class="col-sm-10">
+                    <input type="text" class="form-control" id="subtitle_language" placeholder="eng">
+                  </div>
+                </div>
+                <div class="form-group row">
+                  <label for="subtitle_file" class="col-sm-2 col-form-label">Choose file...</label>
+                  <div class="col-sm-10">
+                    <input type="file" class="form-control" id="subtitle_file">
+                  </div>
+                </div>
+                <div class="form-group row">
+                  <div class="col-sm-10">
+                    <button class="btn btn-primary" type="button" id="subtitle_btn">Save</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
 
+        </div>
+
+        <div id="alert" class="alert alert-danger" role="alert" style="visibility: hidden;"></div>
       </div>
     </div>
   </div>
@@ -138,9 +171,61 @@
       document.getElementById('cancel_btn').addEventListener("click", cancel);
       document.getElementById('encode_btn').addEventListener('click', encode);
       document.getElementById('upload_btn').addEventListener("click", upload);
+      document.getElementById('subtitle_btn').addEventListener("click", subtitles);
 
       window.setInterval(load_video, 1000);
       load_video();
+    }
+
+    function subtitles(e) {
+      e.preventDefault(); 
+      var title = document.getElementById('subtitle_title').value;
+      var language = document.getElementById('subtitle_language').value;
+
+      document.getElementById('alert').style.visibility = "hidden";
+
+      $.getJSON( video.subtitles_url, function(data) {
+        var url = null;
+        var method = null;
+
+        if (! data.length) {
+          url = video.subtitles_url;
+          method = 'PUT';
+        } else {
+          url = data[0].url;
+          method = 'POST';
+        }
+
+        $.ajax({
+          url: url,
+          type: method,
+          data: JSON.stringify({
+            'title': title,
+            'language': language,
+          }),
+          contentType: "application/json",
+          success: function(subtitle) {
+            var file = document.getElementById('subtitle_file').files[0];
+            console.log(file);
+
+            var formdata = new FormData();
+            formdata.append('file', file);
+
+            $.ajax({
+              'url': subtitle.file_url,
+              'method': 'POST',
+              'data': formdata,
+              'processData': false,
+              'contentType': false,
+              'enctype': 'multipart/form-data'
+            });
+          },
+          error: function(error) {
+            document.getElementById('alert').innerHTML = JSON.stringify(error.responseJSON.message);
+            document.getElementById('alert').style.visibility = "visible";
+          }
+        });
+      });
     }
 
     function seconds_to_timestring(sec) {
@@ -270,6 +355,7 @@
         error: function(error) {
           console.log(video);
           document.getElementById('alert').innerHTML = error.message;
+          document.getElementById('alert').style.visibility = "visible";
         }
       });
     }
@@ -298,6 +384,7 @@
         contentType: "application/json",
         error: function(error) {
           document.getElementById('alert').innerHTML = error.message;
+        document.getElementById('alert').style.visibility = "visible";
         }
       });
     }
