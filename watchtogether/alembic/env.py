@@ -10,7 +10,7 @@ import pathlib
 
 sys.path.append(str(pathlib.Path().absolute().parent))
 from watchtogether.config import settings
-from watchtogether.database import init_db, init_engine, engine, Base
+from watchtogether.database import init_engine, engine, Base
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -30,7 +30,6 @@ target_metadata = Base.metadata
 # can be acquired:
 # my_important_option = config.get_main_option("my_important_option")
 # ... etc.
-
 
 def run_migrations_offline():
     """Run migrations in 'offline' mode.
@@ -65,7 +64,6 @@ def run_migrations_online():
     """
 
     init_engine(settings.SQLALCHEMY_DATABASE_URI)
-    init_db()
     connectable = engine
 
     with connectable.connect() as connection:
