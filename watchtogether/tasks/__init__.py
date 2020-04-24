@@ -87,7 +87,8 @@ class FfmpegTranscode:
         self.audio_streamidx = -1
         self.video_streams = []
         self.video_streamidx = -1
-        self.ffmpeg_command = ['ffmpeg', '-y', '-nostdin', '-i', f'{self.orig_file}', '-progress', f'unix://{self.socketfile}', '-loglevel', '24']
+        #self.ffmpeg_command = ['ffmpeg', '-y', '-nostdin', '-i', f'{self.orig_file}', '-progress', f'unix://{self.socketfile}', '-loglevel', '24']
+        self.ffmpeg_command = ['ffmpeg', '-y', '-nostdin', '-i', f'{self.orig_file}', '-progress', f'unix://{self.socketfile}']
         self.encoded_files = []
         self.has_work = False
 
@@ -221,10 +222,11 @@ class FfmpegTranscode:
 
             self.create_stream(command, filename, 'audio')
 
-    def run_ffmpeg(self, command, logfile):
+    def run_ffmpeg(self, command, logfile, reval):
         print(f'Executing: {" ".join(command)}')
         with open(logfile, 'w') as lf:
-            output = subprocess.run(command, stderr=lf)
+            ret = subprocess.run(command, stderr=lf)
+        retval.value = ret
 
     def ffmpeg_progress(self, logfile):
         sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
@@ -232,7 +234,8 @@ class FfmpegTranscode:
         sock.bind(self.socketfile)
         sock.listen(1)
 
-        ffmpeg = multiprocessing.Process(target=self.run_ffmpeg, args=(self.ffmpeg_command, logfile))
+        ffmpeg_retval = multiprocessing.Value('i', -1)
+        ffmpeg = multiprocessing.Process(target=self.run_ffmpeg, args=(self.ffmpeg_command, logfile, ffmpeg_retval))
         ffmpeg.start()
         percentage = 0
         speed = 0
@@ -246,7 +249,7 @@ class FfmpegTranscode:
                     string = data.decode('utf-8')
                     for line in string.splitlines():
                         if line.startswith('out_time_ms'):
-                            progress = int(line.split('=')[1]) / 1000000
+                            progress = int(line.split('=')[1].strip()) / 1000000
                             percentage = (progress / self.duration) * 100
                             percentage = min(percentage, 100)
                         if line.startswith('speed'):
@@ -267,14 +270,16 @@ class FfmpegTranscode:
             ffmpeg.terminate()
             connection.close()
 
-            if percentage < 100:
-                status = ""
-                if ffmpeg_clean_end:
-                    status = "Encoding failed"
-                else:
-                    status = "Encoder crash"
+            if ffmpeg_clean_end and ffmpeg_retval.value == 0:
+                return
+
+            status = ""
+            if ffmpeg_clean_end and ffmpeg_retval.value != 0:
+                status = f"Encoding failed at {percentage}%"
+            else:
+                status = f"Encoder crash at {percentage}%"
                     
-                raise FfmpegException(status)
+            raise FfmpegException(status)
 
     def run(self):
         self.video.status = 'encoding'
