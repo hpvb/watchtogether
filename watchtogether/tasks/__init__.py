@@ -152,15 +152,15 @@ class FfmpegTranscode:
             ]
 
         video_profiles = [
-            {'profile': 'main', 'preset': 'medium', 'crf': '22', 'maxrate': '900k', 'bufsize': '1200k', 'width': 640},
+            {'profile': 'high', 'preset': 'medium', 'crf': '22', 'maxrate': '900k', 'bufsize': '1200k', 'width': 640},
             {'profile': 'high', 'preset': 'medium', 'crf': '22', 'maxrate': '1200k', 'bufsize': '1500k', 'width': 960},
             {'profile': 'high', 'preset': 'medium', 'crf': '21', 'maxrate': '2000k', 'bufsize': '4000k', 'width': 1280},
             {'profile': 'high', 'preset': 'medium', 'crf': '21', 'maxrate': '4500k', 'bufsize': '8000k', 'width': 1920},
         ]
 
         self.video_streams = [
-            {'profile': 'main', 'preset': 'slow', 'crf': '22', 'maxrate': '200k', 'bufsize': '300k', 'width': 320},
-            {'profile': 'main', 'preset': 'slow', 'crf': '22', 'maxrate': '400k', 'bufsize': '500k', 'width': 480}
+            {'profile': 'high', 'preset': 'slow', 'crf': '22', 'maxrate': '200k', 'bufsize': '300k', 'width': 320},
+            {'profile': 'high', 'preset': 'slow', 'crf': '22', 'maxrate': '400k', 'bufsize': '500k', 'width': 480}
         ]
 
         sizes = [1, 1.5, 2, 3]
