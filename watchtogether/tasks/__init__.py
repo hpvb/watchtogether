@@ -158,8 +158,8 @@ class FfmpegTranscode:
         ]
 
         self.video_streams = [
-            {'profile': 'baseline', 'preset': 'slow', 'crf': '22', 'maxrate': '200k', 'bufsize': '300k', 'width': 320},
-            {'profile': 'baseline', 'preset': 'slow', 'crf': '22', 'maxrate': '400k', 'bufsize': '500k', 'width': 480}
+            {'profile': 'main', 'preset': 'slow', 'crf': '22', 'maxrate': '200k', 'bufsize': '300k', 'width': 320},
+            {'profile': 'main', 'preset': 'slow', 'crf': '22', 'maxrate': '400k', 'bufsize': '500k', 'width': 480}
         ]
 
         sizes = [1, 1.5, 2, 3]
