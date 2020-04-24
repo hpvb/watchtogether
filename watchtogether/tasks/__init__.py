@@ -3,6 +3,7 @@
 import os
 import glob
 import json
+import time
 import shutil
 import socket
 import hashlib
@@ -222,11 +223,12 @@ class FfmpegTranscode:
 
             self.create_stream(command, filename, 'audio')
 
-    def run_ffmpeg(self, command, logfile, reval):
+    def run_ffmpeg(self, command, logfile, retval):
         print(f'Executing: {" ".join(command)}')
         with open(logfile, 'w') as lf:
             ret = subprocess.run(command, stderr=lf)
-        retval.value = ret
+            print(f"run_ffmpeg: {ret.returncode}")
+            retval.value = ret.returncode
 
     def ffmpeg_progress(self, logfile):
         sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
@@ -267,9 +269,12 @@ class FfmpegTranscode:
             pass
 
         finally:
+            # Give ffmpeg time to shut down
+            time.sleep(2)
             ffmpeg.terminate()
             connection.close()
 
+            print(f"ffmpeg_clean: {ffmpeg_clean_end}, ffmpeg_retval: {ffmpeg_retval.value}")
             if ffmpeg_clean_end and ffmpeg_retval.value == 0:
                 return
 
