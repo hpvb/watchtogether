@@ -92,6 +92,7 @@ class FfmpegTranscode:
         self.ffmpeg_command = ['ffmpeg', '-y', '-nostdin', '-i', f'{self.orig_file}', '-progress', f'unix://{self.socketfile}']
         self.encoded_files = []
         self.has_work = False
+        self.force_profile = None
 
         self.get_metadata()
         self.create_streams()
@@ -153,15 +154,15 @@ class FfmpegTranscode:
             ]
 
         video_profiles = [
-            {'profile': 'high', 'preset': 'medium', 'crf': '22', 'maxrate': '900k', 'bufsize': '1200k', 'width': 640},
-            {'profile': 'high', 'preset': 'medium', 'crf': '22', 'maxrate': '1200k', 'bufsize': '1500k', 'width': 960},
-            {'profile': 'high', 'preset': 'medium', 'crf': '21', 'maxrate': '2000k', 'bufsize': '4000k', 'width': 1280},
-            {'profile': 'high', 'preset': 'medium', 'crf': '21', 'maxrate': '4500k', 'bufsize': '8000k', 'width': 1920},
+            {'profile': 'main', 'preset': 'medium', 'crf': '22', 'maxrate': '900k', 'bufsize': '1200k', 'pix_fmt': 'yuv420p', 'width': 640},
+            {'profile': 'high', 'preset': 'medium', 'crf': '22', 'maxrate': '1200k', 'bufsize': '1500k', 'pix_fmt': 'yuv420p', 'width': 960},
+            {'profile': 'high', 'preset': 'medium', 'crf': '21', 'maxrate': '2000k', 'bufsize': '4000k', 'pix_fmt': 'yuv420p','width': 1280},
+            {'profile': 'high', 'preset': 'medium', 'crf': '21', 'maxrate': '4500k', 'bufsize': '8000k', 'pix_fmt': 'yuv420p','width': 1920},
         ]
 
         self.video_streams = [
-            {'profile': 'high', 'preset': 'slow', 'crf': '22', 'maxrate': '200k', 'bufsize': '300k', 'width': 320},
-            {'profile': 'high', 'preset': 'slow', 'crf': '22', 'maxrate': '400k', 'bufsize': '500k', 'width': 480}
+            {'profile': 'main', 'preset': 'slow', 'crf': '22', 'maxrate': '200k', 'bufsize': '300k', 'pix_fmt': 'yuv420p', 'width': 320},
+            {'profile': 'main', 'preset': 'slow', 'crf': '22', 'maxrate': '400k', 'bufsize': '500k', 'pix_fmt': 'yuv420p', 'width': 480}
         ]
 
         sizes = [1, 1.5, 2, 3]
@@ -212,7 +213,7 @@ class FfmpegTranscode:
             filename = f'video_{f["width"]}_{f["maxrate"]}.mp4'
             command = ['-map', f'0:{self.video_streamidx}', '-an', '-sn', '-dn', f'-c:v', 'libx264', '-x264-params', f'no-scenecut', f'-profile:v', f['profile'], '-preset:v', f["preset"], '-tune:v', self.video.tune,
                 '-keyint_min', f'{self.keyint}', '-g', f'{self.keyint}', '-sc_threshold', '0', '-bf', '1', '-b_strategy', '0',
-                f'-crf', f['crf'], f'-maxrate', f'{f["maxrate"]}', f'-bufsize', f'{f["bufsize"]}', f'-filter', f'scale={f["width"]}:-2',
+                f'-crf', f['crf'], f'-maxrate', f'{f["maxrate"]}', f'-bufsize', f'{f["bufsize"]}', f'-filter:v', f'scale={f["width"]}:-2,format={f["pix_fmt"]}',
                 '-map_chapters', '-1']
 
             self.create_stream(command, filename, 'video')
