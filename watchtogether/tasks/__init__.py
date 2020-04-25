@@ -381,6 +381,7 @@ def transcode_video(video, task):
         print("Done uploading")
 
     video.playlist = f'{video.id}/playlist.mpd'
+    video.encoding_progress = 100
     video.status = status
     db_session.commit()
 
