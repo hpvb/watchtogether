@@ -18,6 +18,7 @@ from botocore.exceptions import NoCredentialsError
 
 from celery import Celery, states
 from celery.exceptions import Ignore
+from celery.signals import worker_ready
 import billiard as multiprocessing
 
 from watchtogether.database import models, db_session, init_engine
@@ -27,6 +28,16 @@ from watchtogether.util import rm_f, ffprobe
 celery = Celery(__name__, broker=settings.CELERY_BROKER_URL)
 celery.conf.update(settings.as_dict())
 init_engine(settings.SQLALCHEMY_DATABASE_URI)
+
+@worker_ready.connect
+def on_worker_ready(**kwargs):
+    encoding_videos = db_session.query(models.Video).filter_by(status='encoding').all()
+    for video in encoding_videos:
+        transcode.delay(video.id)
+
+    start_encoding_videos = db_session.query(models.Video).filter_by(status='start-encoding').all()
+    for video in start_encoding_videos:
+        transcode.delay(video.id)
 
 def s3_upload(files):
     params = {
@@ -287,6 +298,9 @@ class FfmpegTranscode:
             print(f"ffmpeg_clean: {ffmpeg_clean_end}, ffmpeg_retval: {ffmpeg_retval.value}")
             if ffmpeg_clean_end and ffmpeg_retval.value == 0:
                 return
+
+            if ffmpeg_clean_end and ffmpeg_retval.value == 255:
+                raise Ignore
 
             status = ""
             if ffmpeg_clean_end and ffmpeg_retval.value != 0:
