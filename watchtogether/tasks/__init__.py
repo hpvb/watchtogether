@@ -189,11 +189,20 @@ class FfmpegTranscode:
         outfile = f'{self.outdir}/{filename}'
         command_hash = hashlib.sha256(str(command).encode('utf-8')).hexdigest()
 
-        encoded_file = db_session.query(models.EncodedFile).filter_by(
+        encoded_files = db_session.query(models.EncodedFile).filter_by(
             video_id = self.video.id,
             encoded_file_name = filename,
-            encoding_hash = command_hash
-        ).one_or_none()
+        ).all()
+
+        encoded_file = None
+
+        for file in encoded_files:
+            if file.encoding_hash != command_hash:
+                db_session.delete(file)
+                db_session.commit()
+                encoded_file = None
+            else:
+                encoded_file = file
 
         if not encoded_file or not os.path.isfile(outfile):
             encoded_file = models.EncodedFile(
@@ -345,8 +354,27 @@ def transcode_video(video, task):
     dash_command = ['MP4Box', '-dash', f'{dash_size * 1000}', '-rap', '-frag-rap', '-min-buffer', '16000', '-profile', 'dashavc264:onDemand', '-mpd-title', video.title ,'-out', master_playlist]
     try:
         print("Reencoded file")
-        for encoded_file in video.encoded_files:
-            dash_command.append(f'{outdir}/{encoded_file.encoded_file_name}')
+
+        def sort_video(video):
+            return int(video.split("_")[1])
+
+        def sort_audio(audio):
+            return int(audio.split("_")[1].split("k")[0])
+
+        video_files = []
+        encoded_files = db_session.query(models.EncodedFile).filter_by(video_id = video.id, track_type='video').all()
+        for encoded_file in encoded_files:
+            video_files.append(f'{outdir}/{encoded_file.encoded_file_name}')
+        video_files.sort(key=sort_video)
+
+        audio_files = []
+        encoded_files = db_session.query(models.EncodedFile).filter_by(video_id = video.id, track_type='audio').all()
+        for encoded_file in encoded_files:
+            audio_files.append(f'{outdir}/{encoded_file.encoded_file_name}')
+        audio_files.sort(key=sort_audio)
+
+        dash_command.extend(video_files)
+        dash_command.extend(audio_files)
 
         print(f'Executing: {" ".join(dash_command)}')
         output = subprocess.check_call(dash_command, stderr=subprocess.STDOUT)
@@ -377,7 +405,6 @@ def transcode_video(video, task):
         for index, thread in enumerate(threads):
             thread.join()
 
-        shutil.rmtree(outdir, ignore_errors = True)
         print("Done uploading")
 
     video.playlist = f'{video.id}/playlist.mpd'
