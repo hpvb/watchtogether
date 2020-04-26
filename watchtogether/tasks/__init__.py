@@ -123,6 +123,7 @@ class FfmpegTranscode:
         if vcodec == "":
             raise FfmpegException('Uploaded file was not a video file.')
 
+        channels = 0
         self.duration = float(self.streaminfo['format']['duration'])
         for stream in self.streaminfo['streams']:
             if stream['codec_type'] == 'video':
@@ -137,16 +138,17 @@ class FfmpegTranscode:
                     if self.audio_streamidx == -1 and stream['tags']['language'] != 'eng':
                         self.audio_streamidx = stream['index']
                         self.audio_codec = stream['codec_name']
-                    if stream['tags']['language'] == 'eng':
+                    if stream['tags']['language'] == 'eng' and stream['channels'] > channels:
                         self.audio_streamidx = stream['index']
                         self.audio_codec = stream['codec_name']
+                        channels = stream['channels']
                 except KeyError:
                     if self.audio_streamidx == -1:
                         self.audio_streamidx = stream['index']
 
         if self.video_streamidx == -1:
             self.video_streamidx = 0
-        if self.audio_streamidx == -1 and has_audio:
+        if self.audio_streamidx == -1 and self.has_audio:
             self.audio_streamidx = 1
 
         try:
