@@ -154,10 +154,10 @@ class FfmpegTranscode:
             ]
 
         video_profiles = [
-            {'profile': 'main', 'preset': 'medium', 'crf': '22', 'maxrate': '900k', 'bufsize': '1200k', 'pix_fmt': 'yuv420p', 'width': 640},
-            {'profile': 'high', 'preset': 'medium', 'crf': '22', 'maxrate': '1200k', 'bufsize': '1500k', 'pix_fmt': 'yuv420p', 'width': 960},
-            {'profile': 'high', 'preset': 'medium', 'crf': '21', 'maxrate': '2000k', 'bufsize': '4000k', 'pix_fmt': 'yuv420p','width': 1280},
-            {'profile': 'high', 'preset': 'medium', 'crf': '21', 'maxrate': '4500k', 'bufsize': '8000k', 'pix_fmt': 'yuv420p','width': 1920},
+            {'profile': 'main', 'preset': 'medium', 'crf': '22', 'maxrate':  '900k', 'bufsize': '1200k', 'pix_fmt': 'yuv420p', 'width':  640},
+            {'profile': 'high', 'preset': 'medium', 'crf': '22', 'maxrate': '1200k', 'bufsize': '1500k', 'pix_fmt': 'yuv420p', 'width':  960},
+            {'profile': 'high', 'preset': 'medium', 'crf': '21', 'maxrate': '2000k', 'bufsize': '4000k', 'pix_fmt': 'yuv420p', 'width': 1280},
+            {'profile': 'high', 'preset': 'medium', 'crf': '21', 'maxrate': '4500k', 'bufsize': '8000k', 'pix_fmt': 'yuv420p', 'width': 1920},
         ]
 
         self.video_streams = [
@@ -204,7 +204,7 @@ class FfmpegTranscode:
             else:
                 encoded_file = file
 
-        if not encoded_file or not os.path.isfile(outfile):
+        if not encoded_file:
             encoded_file = models.EncodedFile(
                 video_id = self.video.id,
                 encoded_file_name = filename,
@@ -223,7 +223,7 @@ class FfmpegTranscode:
             command = ['-map', f'0:{self.video_streamidx}', '-an', '-sn', '-dn', f'-c:v', 'libx264', '-x264-params', f'no-scenecut', f'-profile:v', f['profile'], '-preset:v', f["preset"], '-tune:v', self.video.tune,
                 '-keyint_min', f'{self.keyint}', '-g', f'{self.keyint}', '-sc_threshold', '0', '-bf', '1', '-b_strategy', '0',
                 f'-crf', f['crf'], f'-maxrate', f'{f["maxrate"]}', f'-bufsize', f'{f["bufsize"]}', f'-filter:v', f'scale={f["width"]}:-2,format={f["pix_fmt"]}',
-                '-map_chapters', '-1']
+                '-map_chapters', '-1', '-aspect', f'{self.vwidth}:{self.vheight}']
 
             self.create_stream(command, filename, 'video')
 
