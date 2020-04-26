@@ -133,12 +133,16 @@ class FfmpegTranscode:
                 self.video_streamidx = stream['index']
             if stream['codec_type'] == 'audio':
                 self.has_audio = True
-                if self.audio_streamidx == -1 and stream['tags']['language'] != 'eng':
-                    self.audio_streamidx = stream['index']
-                    self.audio_codec = stream['codec_name']
-                if stream['tags']['language'] == 'eng':
-                    self.audio_streamidx = stream['index']
-                    self.audio_codec = stream['codec_name']
+                try:
+                    if self.audio_streamidx == -1 and stream['tags']['language'] != 'eng':
+                        self.audio_streamidx = stream['index']
+                        self.audio_codec = stream['codec_name']
+                    if stream['tags']['language'] == 'eng':
+                        self.audio_streamidx = stream['index']
+                        self.audio_codec = stream['codec_name']
+                except KeyError:
+                    if self.audio_streamidx == -1:
+                        self.audio_streamidx = stream['index']
 
         if self.video_streamidx == -1:
             self.video_streamidx = 0
