@@ -25,13 +25,31 @@ class Subtitle(Base):
     video_id = Column(String(10), ForeignKey('video.id'), nullable=False)
 
     language = Column(String(5), nullable=False, default='eng')
+    title = Column(Text)
+
+    internal = Column(Boolean, default=False)
+    internal_streamidx = Column(Integer)
+    internal_include = Column(Boolean, default=False)
+
     orig_file = Column(Text, nullable=False)    
+    encoded_file_name = Column(Text, nullable=False)
+
+class EncodedFile(Base):
+    __tablename__ = 'encoded_file'
+
+    id = Column(Integer, primary_key=True)
+    video_id = Column(String(10), ForeignKey('video.id'), nullable=False)
+    
+    language = Column(String(5), nullable=False, default='eng')
+    track_type = Column(String(10), nullable=False)
+    encoding_hash = Column(String(64), nullable=False)
+    encoded_file_name = Column(Text, nullable=False)
 
 class Video(WatchtogetherBase, Base):
     __tablename__ = 'video'
     
-    encoding_progress = Column(Integer)
-    encoding_speed = Column(Integer)
+    encoding_progress = Column(Float, default=0)
+    encoding_speed = Column(Float, default=0)
     status = Column(String(15), default='file-waiting')
     status_message = Column(Text)
 
@@ -47,4 +65,8 @@ class Video(WatchtogetherBase, Base):
     orig_file = Column(Text)
     orig_file_name = Column(Text)
     playlist = Column(Text)
+
+    celery_taskid = Column(Text)
+
     subtitles = relationship('Subtitle', backref='Video', lazy=True)
+    encoded_files = relationship('EncodedFile', backref='Video', lazy=True)

@@ -132,7 +132,6 @@
 
     var video = null;
     var uploader = null;
-    var prev_title = null;
 
     function initialize() {
       document.getElementById('cancel_btn').addEventListener("click", cancel);
@@ -156,17 +155,13 @@
       $.getJSON( '/api/videos/{{ video.id }}', function(data) {
         video = data;
 
+        document.getElementById('title').value = video.title;
         var progress = document.getElementById('encode_progress');
         progress.innerHTML = "" + video.encoding_progress.toFixed(2) + "%";
         progress.style.width = "" + video.encoding_progress + "%";
   
         if (document.getElementById('file-name').value == "") {
           document.getElementById('file-name').value = video.orig_file_name;
-        }
-
-        if (video.title != prev_title) {
-          document.getElementById('title').value = video.title;
-          prev_title = video.title;
         }
 
         document.getElementById('cancel_btn').disabled = true;
@@ -202,7 +197,7 @@
             statuscardheader.className = 'card-header bg-primary';
             break;
           case 'ready':
-            statusbox.innerHTML = 'Ready! Watch it at <a href="' + video.watch_url + '">' + video.watch_url + '</a>';
+            statusbox.innerHTML = 'Ready! Watch it at <a href="{{ url_for('main.watch', video_id=video.id) }}">{{ url_for('main.watch', video_id=video.id, _external=True) }}</a>';
             statuscard.className = 'card border-success';
             statuscardheader.className = 'card-header bg-success';
             break;
@@ -211,18 +206,6 @@
             statuscard.className = 'card border-danger';
             statuscardheader.className = 'card-header bg-danger';
             break;
-        }
-
-        switch(video.status) {
-          case 'encoding':
-          case 'start-encoding':
-          case 'ready':
-          case 'file-uploaded':
-          case 'error':
-            var progress = document.getElementById('upload_progress');
-            progress.innerHTML = "100%";
-            progress.style.width = "100%";
-          break;
         }
 
         switch(video.status) {
@@ -332,10 +315,6 @@
             encode();
           }
         }
-      });
-
-      uploader.on('fileError', function(file, message) {
-        console.log(message);
       });
 
       uploader.on('error', function(message, file) {

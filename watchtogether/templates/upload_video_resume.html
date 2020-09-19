@@ -1,0 +1,39 @@
+<html>
+<head>
+  <link rel="shortcut icon" href="/static/logo_small.png">
+<head>
+<body>
+
+<input type="text" id="inlineFormInputName2" placeholder="Filename" disabled>
+<button type="button" id="file-picker">Browse</button>
+<progress id="progress" value="0" max="100">0%</progress>
+<button type="button" class="btn btn-primary" id="upload">Upload</button>
+
+<script src="https://cdn.jsdelivr.net/npm/resumablejs@1.1.0/resumable.min.js"></script>
+<script>
+  var uploader = new Resumable({
+    target: '/videos/{{ video["id"] }}/resumable_upload', 
+    simultaneousUploads: 1,
+    prioritizeFirstAndLastChunk: true,
+    chunkSize: 1024 * 1024,
+    maxFiles: 1
+  });
+
+  uploader.assignBrowse(document.getElementById('file-picker'));
+  uploader.on('fileAdded', function(file) {
+    console.log(file.fileName);
+    document.getElementById('inlineFormInputName2').value = file.fileName;
+    document.getElementById('upload').addEventListener("click", uploader.upload);
+  });
+
+  uploader.on('fileProgress', function(file) {
+    var progress = document.getElementById('progress');
+    progress.innerHTML = "" + (file.progress() * 100).toFixed(2) + "%";
+    progress.value = file.progress() * 100;
+  });
+
+  uploader.on('complete', function() {
+  });
+</script>
+</body>
+</html>

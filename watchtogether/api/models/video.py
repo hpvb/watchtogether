@@ -1,7 +1,7 @@
 import shutil
 import os
 
-from flask import request, redirect, session, abort
+from flask import request, redirect, session, abort, url_for
 from flask import current_app as app
 from flask_restful import Resource, marshal_with, reqparse, fields, marshal
 
@@ -15,21 +15,9 @@ from watchtogether import tasks
 from . import ValidValueParser
 from.video_file import VideoFile, VideoFileUrl
 
-video_fields = {
-    'url': fields.Url('video', absolute=True),
-    'file_url': VideoFileUrl(),
-    'id': fields.String,
-    'title': fields.String,
-    'width': fields.Integer,
-    'height': fields.Integer,
-    'duration': fields.Float,
-    'encoding_progress': fields.Integer,
-    'encoding_speed': fields.Float,
-    'status': fields.String,
-    'tune': fields.String,
-    'default_subtitles': fields.Boolean,
-    'orig_file_name': fields.String
-}
+class VideoWatchUrl(fields.Raw):
+    def output(self, key, obj):
+        return url_for('main.watch', video_id=obj.id, _external=True)
 
 def VideoTuneParser(value):
     valid = ['film', 'animation', 'grain']
@@ -38,6 +26,24 @@ def VideoTuneParser(value):
 def VideoStateParser(value):
     valid = ['file-waiting', 'start-encoding']
     return ValidValueParser('State', value, valid)
+
+video_fields = {
+    'url': fields.Url('video', absolute=True),
+    'file_url': VideoFileUrl,
+    'watch_url': VideoWatchUrl,
+    'id': fields.String,
+    'title': fields.String,
+    'width': fields.Integer,
+    'height': fields.Integer,
+    'duration': fields.Float,
+    'encoding_progress': fields.Float,
+    'encoding_speed': fields.Float,
+    'status': fields.String,
+    'status_message': fields.String,
+    'tune': fields.String,
+    'default_subtitles': fields.Boolean,
+    'orig_file_name': fields.String
+}
 
 new_video_parser = reqparse.RequestParser()
 new_video_parser.add_argument('title', nullable=False, required=True)
@@ -90,11 +96,11 @@ class Video(Resource):
                     abort(409, 'Cannot upload new file while encoding')
 
             if status == 'start-encoding':
-                if video.status in ['file-uploaded', 'ready']:
+                if video.status in ['file-uploaded', 'ready', 'error']:
                     video.status = status
                     video.encoding_progress = 0
                     video.status_error =""
-                    tasks.transcode.delay(video.id)
+                    video.celery_taskid = tasks.transcode.delay(video.id)
                 else:
                     abort(409, 'Cannot start encoding while video is in this state')
 
